@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Candid — Honest Polls</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Instrument+Sans:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root {
+  --bg:#08080e; --surface:#111118; --sur2:#18181f; --sur3:#1e1e28;
+  --border:#26263a; --text:#ede9f8; --muted:#5c5878;
+  --accent:#7c6dfa; --pink:#f06da8; --green:#50daa0; --yellow:#f0d060;
+  --radius:18px; --fh:'Syne',sans-serif; --fb:'Instrument Sans',sans-serif;
+}
+html,body{height:100%;overflow-x:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100dvh;-webkit-font-smoothing:antialiased}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 70% 50% at 15% 0%,rgba(124,109,250,.13) 0%,transparent 55%),radial-gradient(ellipse 50% 40% at 85% 90%,rgba(240,109,168,.09) 0%,transparent 55%);pointer-events:none;z-index:0}
+
+.page{display:none;flex-direction:column;align-items:center;padding:36px 18px 90px;min-height:100dvh;position:relative;z-index:1}
+.page.active{display:flex}
+.wrap{width:100%;max-width:560px}
+
+.logo{font-family:var(--fh);font-size:13px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:40px;animation:up .5s ease both}
+.logo b{color:var(--pink);font-weight:800}
+
+h1{font-family:var(--fh);font-size:clamp(30px,7vw,50px);font-weight:800;line-height:1.06;letter-spacing:-.025em;margin-bottom:10px}
+h1 em{font-style:normal;color:var(--accent)}
+h2{font-family:var(--fh);font-size:20px;font-weight:700;margin-bottom:18px;letter-spacing:-.01em}
+.sub{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:32px}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px 24px;width:100%;animation:up .5s ease both}
+
+label{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;font-weight:500}
+input[type=text],textarea{width:100%;background:var(--sur2);border:1px solid var(--border);border-radius:12px;padding:12px 15px;color:var(--text);font-family:var(--fb);font-size:14px;outline:none;resize:none;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none}
+input::placeholder,textarea::placeholder{color:var(--muted)}
+input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,109,250,.11)}
+.field{margin-bottom:18px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 22px;border-radius:12px;border:none;font-family:var(--fb);font-size:14px;font-weight:500;cursor:pointer;transition:transform .15s,box-shadow .15s,opacity .15s;-webkit-tap-highlight-color:transparent}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.4;pointer-events:none}
+.btn-primary{background:var(--accent);color:#fff;width:100%;box-shadow:0 4px 24px rgba(124,109,250,.25)}
+.btn-primary:hover{box-shadow:0 6px 32px rgba(124,109,250,.38)}
+.btn-secondary{background:var(--sur2);color:var(--text);border:1px solid var(--border);width:100%}
+.btn-ghost{background:transparent;color:var(--muted);font-size:13px;padding:8px 12px}
+.btn-sm{padding:8px 16px;font-size:13px;width:auto}
+
+.qblock{background:var(--sur2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;animation:up .3s ease both;position:relative}
+.qnum{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:10px}
+.opt-row{display:flex;gap:8px;margin-bottom:8px;animation:up .2s ease both}
+.opt-row input{flex:1;padding:10px 13px;font-size:14px}
+.rm-btn{width:30px;height:30px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s,color .15s}
+.rm-btn:hover{background:rgba(240,80,80,.1);color:#f06060}
+.add-opt{width:100%;background:none;border:1px dashed var(--border);border-radius:10px;padding:8px 14px;color:var(--muted);font-family:var(--fb);font-size:13px;cursor:pointer;margin-top:4px;transition:border-color .2s,color .2s}
+.add-opt:hover{border-color:var(--accent);color:var(--accent)}
+.del-q{position:absolute;top:12px;right:12px;width:26px;height:26px;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.del-q:hover{background:rgba(240,80,80,.1);color:#f06060;border-color:rgba(240,80,80,.3)}
+
+.share-box{background:var(--sur2);border:1px solid var(--accent);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;margin:18px 0;box-shadow:0 0 0 1px rgba(124,109,250,.1),0 8px 28px rgba(124,109,250,.1)}
+.share-url{flex:1;font-size:12px;color:var(--accent);word-break:break-all;line-height:1.4;font-family:monospace}
+.copy-btn{background:var(--accent);color:#fff;border:none;border-radius:9px;padding:8px 14px;font-size:13px;font-family:var(--fb);cursor:pointer;flex-shrink:0;transition:transform .15s}
+.copy-btn:active{transform:scale(.95)}
+
+.priv-note{display:flex;align-items:center;gap:8px;background:rgba(80,218,160,.06);border:1px solid rgba(80,218,160,.15);border-radius:12px;padding:11px 14px;font-size:13px;color:var(--green);margin-bottom:22px;animation:up .3s ease both}
+
+.badge{background:var(--sur2);border:1px solid var(--border);border-radius:99px;padding:4px 12px;font-size:12px;color:var(--muted)}
+.badge.live{border-color:rgba(80,218,160,.3);color:var(--green);background:rgba(80,218,160,.07)}
+.badge.live::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:6px;animation:pulse 1.5s infinite;vertical-align:middle}
+.poll-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+
+.vq{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:14px;animation:up .4s ease both}
+.vq-title{font-family:var(--fh);font-size:17px;font-weight:700;margin-bottom:16px;line-height:1.3}
+
+.opt-btn{width:100%;background:var(--sur2);border:1px solid var(--border);border-radius:11px;padding:12px 14px;color:var(--text);font-family:var(--fb);font-size:14px;text-align:left;cursor:pointer;margin-bottom:8px;transition:border-color .2s,background .2s,transform .12s;display:flex;align-items:center;gap:10px;-webkit-tap-highlight-color:transparent;position:relative;overflow:hidden}
+.opt-btn:hover{border-color:var(--accent);background:rgba(124,109,250,.07)}
+.opt-btn:active{transform:scale(.99)}
+.opt-btn.sel{border-color:var(--accent);background:rgba(124,109,250,.13);color:#fff}
+.odot{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;transition:border-color .2s,background .2s;display:flex;align-items:center;justify-content:center}
+.opt-btn.sel .odot{border-color:var(--accent);background:var(--accent)}
+.ochk{font-size:10px;color:#fff;opacity:0;transform:scale(0);transition:all .2s cubic-bezier(.34,1.56,.64,1)}
+.opt-btn.sel .ochk{opacity:1;transform:scale(1)}
+
+.res-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:14px;animation:up .4s ease both}
+.res-qtitle{font-family:var(--fh);font-size:16px;font-weight:700;margin-bottom:16px;line-height:1.3}
+.res-item{margin-bottom:12px}
+.res-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.res-opt{font-size:14px;font-weight:500}
+.res-cnt{font-size:12px;color:var(--muted)}
+.res-track{height:7px;background:var(--sur2);border-radius:99px;overflow:hidden}
+.res-fill{height:100%;border-radius:99px;transition:width 1.1s cubic-bezier(.34,1,.64,1);background:linear-gradient(90deg,var(--accent),var(--pink))}
+.res-fill.top{background:linear-gradient(90deg,var(--green),#7cfad4)}
+
+.nick-wrap{background:var(--sur2);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:18px;animation:up .3s ease both}
+.nick-wrap p{font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.5}
+.nick-row{display:flex;gap:8px}
+.nick-row input{flex:1}
+
+.spinner{width:34px;height:34px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:48px auto}
+
+hr{border:none;border-top:1px solid var(--border);margin:22px 0}
+
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(70px);background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px 20px;font-size:14px;color:var(--text);box-shadow:0 8px 32px rgba(0,0,0,.45);z-index:9999;transition:transform .35s cubic-bezier(.34,1.56,.64,1),opacity .3s;opacity:0;white-space:nowrap;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+.poll-row{background:var(--sur2);border:1px solid var(--border);border-radius:13px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;animation:up .3s ease both;cursor:pointer;transition:border-color .2s}
+.poll-row:hover{border-color:var(--accent)}
+.poll-row-info{flex:1;min-width:0}
+.poll-row-title{font-weight:500;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.poll-row-meta{font-size:12px;color:var(--muted);margin-top:3px}
+
+/* Not-configured banner */
+.not-configured{background:rgba(240,80,80,.07);border:1px solid rgba(240,80,80,.25);border-radius:14px;padding:20px;margin-bottom:24px;animation:up .4s ease both}
+.not-configured h3{font-family:var(--fh);font-size:15px;color:#f08080;margin-bottom:8px}
+.not-configured p{font-size:13px;color:#c07070;line-height:1.7}
+.not-configured code{background:rgba(240,80,80,.12);border-radius:5px;padding:1px 6px;font-family:monospace;font-size:12px}
+
+.ripple{position:absolute;border-radius:50%;background:rgba(124,109,250,.18);transform:scale(0);animation:rippleA .55s linear;pointer-events:none}
+
+@keyframes up{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes rippleA{to{transform:scale(4);opacity:0}}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+@media(max-width:480px){.page{padding:24px 14px 70px}.card{padding:20px 16px}}
+</style>
+</head>
+<body>
+
+<!-- ══ HOME ══════════════════════════════════════════════════════════════════ -->
+<div class="page active" id="pg-home">
+<div class="wrap">
+  <div class="logo">Candid <b>·</b> Honest Polls</div>
+
+  <h1>No names.<br/><em>Pure honesty.</em></h1>
+  <p class="sub">Create anonymous polls for your group. Share one link. Everyone votes privately — nobody sees who picked what.</p>
+
+  <!-- Shown only if API key not set in the file -->
+  <div class="not-configured" id="notConfigured" style="display:none">
+    <h3>⚠️ API Key Not Set</h3>
+    <p>
+      Open this HTML file in a text editor and find the line:<br/>
+      <code>const API_KEY = 'PASTE_YOUR_JSONBIN_KEY_HERE';</code><br/><br/>
+      Replace it with your key from <strong>jsonbin.io → API Keys</strong>.<br/>
+      You only do this once — nobody else needs to touch it.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>Create a Poll</h2>
+    <div class="field">
+      <label>Poll Title</label>
+      <input type="text" id="pollTitle" placeholder="e.g. Where should we eat tonight?" maxlength="100"/>
+    </div>
+    <div class="field">
+      <label>Your Nickname <span style="font-size:10px;color:var(--muted);text-transform:none;letter-spacing:0">(only visible to you)</span></label>
+      <input type="text" id="creatorNick" placeholder="e.g. Alex" maxlength="30"/>
+    </div>
+    <hr/>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <label style="margin:0">Questions</label>
+      <button class="btn btn-ghost" onclick="addQuestion()" style="color:var(--accent)">+ Question</button>
+    </div>
+    <div id="qList"></div>
+    <button class="btn btn-primary" id="createBtn" onclick="createPoll()">🔐 Create Anonymous Poll</button>
+  </div>
+
+  <div class="card" id="shareCard" style="display:none;margin-top:14px">
+    <h2>🎉 Poll is Live!</h2>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:4px">Share this link with your group. Votes are 100% anonymous.</p>
+    <div class="share-box">
+      <span class="share-url" id="shareUrl"></span>
+      <button class="copy-btn" onclick="copyLink()">Copy</button>
+    </div>
+    <button class="btn btn-secondary" onclick="openResults(window._currentPollId)">📊 View Live Results</button>
+  </div>
+
+  <div id="myPollsSection" style="margin-top:24px;display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <label style="margin:0">My Polls</label>
+    </div>
+    <div id="myPollsList"></div>
+  </div>
+</div>
+</div>
+
+<!-- ══ VOTE ═══════════════════════════════════════════════════════════════════ -->
+<div class="page" id="pg-vote">
+<div class="wrap">
+  <div class="logo">Candid <b>·</b> Honest Polls</div>
+  <div id="voteSpinner"><div class="spinner"></div></div>
+  <div id="voteBody" style="display:none">
+    <div class="poll-meta">
+      <span class="badge live">Live</span>
+      <span class="badge" id="vVoteCount">0 votes</span>
+    </div>
+    <h1 id="vTitle" style="font-size:clamp(22px,6vw,38px);margin-bottom:8px"></h1>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:22px" id="vSubtitle"></p>
+    <div class="priv-note">🔒 Completely anonymous — your name is never stored anywhere.</div>
+    <div class="nick-wrap" id="nickWrap">
+      <label>Your Nickname</label>
+      <p>Only used to prevent duplicate votes. Never shown to anyone — not even the creator.</p>
+      <div class="nick-row">
+        <input type="text" id="voterNick" placeholder="Enter your nickname" maxlength="30" autocapitalize="words"/>
+        <button class="btn btn-primary btn-sm" onclick="confirmNick()">Go →</button>
+      </div>
+    </div>
+    <div id="voteQuestions" style="display:none"></div>
+    <button class="btn btn-primary" id="submitBtn" style="display:none" onclick="submitVote()">Submit Vote 🗳️</button>
+    <p id="votedMsg" style="display:none;text-align:center;font-size:13px;color:var(--green);margin-top:14px"></p>
+  </div>
+</div>
+</div>
+
+<!-- ══ RESULTS ════════════════════════════════════════════════════════════════ -->
+<div class="page" id="pg-results">
+<div class="wrap">
+  <div class="logo">Candid <b>·</b> Honest Polls</div>
+  <div id="resSpinner"><div class="spinner"></div></div>
+  <div id="resBody" style="display:none">
+    <div class="poll-meta">
+      <span class="badge live">Live Results</span>
+      <span class="badge" id="rVoteCount">0 votes</span>
+    </div>
+    <h1 id="rTitle" style="font-size:clamp(22px,6vw,38px);margin-bottom:6px"></h1>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:24px">Results update every 5 seconds. Voter identities are never stored.</p>
+    <div id="resArea"></div>
+    <hr/>
+    <button class="btn btn-secondary" onclick="copyLink()" style="margin-bottom:10px">🔗 Share Poll Link</button>
+    <button class="btn btn-ghost" onclick="goHome()" style="width:100%">← Home</button>
+  </div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════════════
+//  ↓↓↓  PASTE YOUR JSONBIN.IO SECRET KEY HERE  ↓↓↓
+//  Get it free at jsonbin.io → Sign up → API Keys → Copy Secret Key
+// ══════════════════════════════════════════════════════════════════════════════
+const API_KEY = '$2a$10$5RR45nITDBrWqNI0iPJZ8OX14shslDCDk9xyRPIw.nkYwiYOKfAjW';
+// ══════════════════════════════════════════════════════════════════════════════
+
+const JSONBIN_BASE = 'https://api.jsonbin.io/v3';
+
+// ── JSONBIN HELPERS ───────────────────────────────────────────────────────────
+async function binCreate(data) {
+  const res = await fetch(`${JSONBIN_BASE}/b`, {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json', 'X-Master-Key': API_KEY, 'X-Bin-Private':'false' },
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) throw new Error('Create failed: ' + res.status);
+  return (await res.json()).metadata.id;
+}
+
+async function binRead(id) {
+  const res = await fetch(`${JSONBIN_BASE}/b/${id}/latest`, {
+    headers: { 'X-Master-Key': API_KEY }
+  });
+  if (!res.ok) throw new Error('Read failed: ' + res.status);
+  return (await res.json()).record;
+}
+
+async function binUpdate(id, data) {
+  const res = await fetch(`${JSONBIN_BASE}/b/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type':'application/json', 'X-Master-Key': API_KEY },
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) throw new Error('Update failed: ' + res.status);
+  return (await res.json()).record;
+}
+
+// ── UTILITIES ─────────────────────────────────────────────────────────────────
+function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function simpleHash(str) { let h=0; for(let i=0;i<str.length;i++){h=((h<<5)-h)+str.charCodeAt(i);h|=0;} return (h>>>0).toString(36); }
+
+function toast(msg, dur=2600) {
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),dur);
+}
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('pg-'+id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function goHome() { if(resInterval) clearInterval(resInterval); showPage('home'); loadMyPolls(); }
+
+function buildShareUrl(pollId) {
+  return `${location.origin}${location.pathname}?poll=${pollId}`;
+}
+
+function copyLink() {
+  const url = window._currentPollId ? buildShareUrl(window._currentPollId) : '';
+  if (!url) { toast('No poll link yet'); return; }
+  navigator.clipboard.writeText(url).then(()=>toast('Link copied! 📋')).catch(()=>{
+    const ta=document.createElement('textarea'); ta.value=url;
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta); toast('Link copied! 📋');
+  });
+}
+
+function isKeySet() { return API_KEY && API_KEY !== 'PASTE_YOUR_JSONBIN_KEY_HERE'; }
+
+// ── QUESTION BUILDER ──────────────────────────────────────────────────────────
+let questions = [];
+
+function addQuestion(txt='', opts=['','']) {
+  questions.push({id:uid(), text:txt, options:[...opts]});
+  renderQList();
+}
+function delQuestion(id) {
+  if(questions.length<=1){toast('Need at least one question');return;}
+  questions=questions.filter(q=>q.id!==id); renderQList();
+}
+function addOpt(qid) {
+  const q=questions.find(x=>x.id===qid); if(!q) return;
+  if(q.options.length>=8){toast('Max 8 options');return;}
+  q.options.push(''); renderQList();
+}
+function delOpt(qid,i) {
+  const q=questions.find(x=>x.id===qid);
+  if(!q||q.options.length<=2){toast('Need at least 2 options');return;}
+  q.options.splice(i,1); renderQList();
+}
+function syncQ(qid,field,val,i) {
+  const q=questions.find(x=>x.id===qid); if(!q) return;
+  if(field==='text') q.text=val;
+  if(field==='opt') q.options[i]=val;
+}
+function renderQList() {
+  const c=document.getElementById('qList');
+  const focId=document.activeElement?.dataset?.fid;
+  c.innerHTML='';
+  questions.forEach((q,qi)=>{
+    const d=document.createElement('div'); d.className='qblock';
+    d.innerHTML=`
+      <div class="qnum">Question ${qi+1}</div>
+      ${questions.length>1?`<button class="del-q" onclick="delQuestion('${q.id}')">✕</button>`:''}
+      <input type="text" placeholder="Type your question…" maxlength="200" value="${esc(q.text)}"
+        data-fid="qt-${q.id}" oninput="syncQ('${q.id}','text',this.value)" style="margin-bottom:0"/>
+      <div style="margin-top:10px">
+        ${q.options.map((o,oi)=>`
+          <div class="opt-row">
+            <input type="text" placeholder="Option ${oi+1}" maxlength="100" value="${esc(o)}"
+              data-fid="qo-${q.id}-${oi}" oninput="syncQ('${q.id}','opt',this.value,${oi})"/>
+            ${q.options.length>2?`<button class="rm-btn" onclick="delOpt('${q.id}',${oi})">−</button>`:''}
+          </div>`).join('')}
+        <button class="add-opt" onclick="addOpt('${q.id}')">+ Add option</button>
+      </div>`;
+    c.appendChild(d);
+  });
+  if(focId){const el=c.querySelector(`[data-fid="${focId}"]`);if(el){el.focus();const l=el.value.length;el.setSelectionRange(l,l);}}
+}
+
+// ── CREATE POLL ───────────────────────────────────────────────────────────────
+async function createPoll() {
+  if (!isKeySet()) { toast('Set your API key in the HTML file first'); document.getElementById('notConfigured').style.display=''; return; }
+
+  const title=document.getElementById('pollTitle').value.trim();
+  const creator=document.getElementById('creatorNick').value.trim();
+  if(!title){toast('Enter a poll title');return;}
+  if(!creator){toast('Enter your nickname');return;}
+
+  for(let i=0;i<questions.length;i++){
+    const q=questions[i];
+    if(!q.text.trim()){toast(`Fill in Question ${i+1}`);return;}
+    const valid=q.options.filter(o=>o.trim());
+    if(valid.length<2){toast(`Question ${i+1} needs 2+ options`);return;}
+    q.options=valid;
+  }
+
+  const btn=document.getElementById('createBtn');
+  btn.disabled=true; btn.textContent='Creating…';
+
+  try {
+    const pollData = {
+      title, creator,
+      createdAt: Date.now(),
+      questions: questions.map(q=>({id:q.id,text:q.text,options:q.options})),
+      totalVotes: 0,
+      votes: Object.fromEntries(questions.map(q=>[q.id,Object.fromEntries(q.options.map((_,i)=>[i,0]))])),
+      voterHashes: []
+    };
+
+    const binId = await binCreate(pollData);
+    window._currentPollId = binId;
+
+    const myPolls=JSON.parse(localStorage.getItem('candid-mypolls')||'[]');
+    myPolls.unshift({id:binId,title,createdAt:Date.now()});
+    localStorage.setItem('candid-mypolls',JSON.stringify(myPolls.slice(0,20)));
+
+    document.getElementById('shareUrl').textContent=buildShareUrl(binId);
+    document.getElementById('shareCard').style.display='';
+    document.getElementById('shareCard').scrollIntoView({behavior:'smooth'});
+    toast('Poll created! 🎉');
+    loadMyPolls();
+  } catch(e) {
+    console.error(e); toast('Error: '+e.message);
+  }
+  btn.disabled=false; btn.textContent='🔐 Create Anonymous Poll';
+}
+
+// ── MY POLLS ──────────────────────────────────────────────────────────────────
+function loadMyPolls() {
+  const myPolls=JSON.parse(localStorage.getItem('candid-mypolls')||'[]');
+  const sec=document.getElementById('myPollsSection');
+  const list=document.getElementById('myPollsList');
+  if(!myPolls.length){sec.style.display='none';return;}
+  sec.style.display=''; list.innerHTML='';
+  myPolls.forEach((p,i)=>{
+    const d=document.createElement('div'); d.className='poll-row'; d.style.animationDelay=(i*.05)+'s';
+    d.innerHTML=`<div class="poll-row-info"><div class="poll-row-title">${esc(p.title)}</div><div class="poll-row-meta">${new Date(p.createdAt).toLocaleDateString()}</div></div><span style="color:var(--muted);font-size:18px">→</span>`;
+    d.onclick=()=>openResults(p.id);
+    list.appendChild(d);
+  });
+}
+
+// ── VOTE PAGE ─────────────────────────────────────────────────────────────────
+let vPollData=null, vPollId=null, vNick=null, vSelections={};
+
+async function loadVotePage(pollId) {
+  showPage('vote'); vPollId=pollId; window._currentPollId=pollId;
+  document.getElementById('voteSpinner').style.display='';
+  document.getElementById('voteBody').style.display='none';
+
+  if (!isKeySet()) {
+    document.getElementById('voteSpinner').innerHTML='<p style="text-align:center;color:var(--muted);padding:40px">App not configured yet. Contact the poll creator.</p>';
+    return;
+  }
+
+  try {
+    vPollData=await binRead(pollId);
+    document.getElementById('voteSpinner').style.display='none';
+    document.getElementById('voteBody').style.display='';
+    document.getElementById('vTitle').textContent=vPollData.title;
+    document.getElementById('vSubtitle').textContent=`${vPollData.questions.length} question${vPollData.questions.length!==1?'s':''}`;
+    document.getElementById('vVoteCount').textContent=(vPollData.totalVotes||0)+' votes';
+
+    const alreadyVoted=localStorage.getItem('candid-voted-'+pollId);
+    if(alreadyVoted){
+      vNick=localStorage.getItem('candid-nick-'+pollId)||'';
+      try{vSelections=JSON.parse(alreadyVoted);}catch(e){}
+      document.getElementById('nickWrap').style.display='none';
+      renderVoteQuestions(true);
+      document.getElementById('votedMsg').textContent='✓ You already voted. Taking you to results…';
+      document.getElementById('votedMsg').style.display='';
+      setTimeout(()=>openResults(pollId),1800);
+    }
+  } catch(e) {
+    document.getElementById('voteSpinner').innerHTML='<p style="text-align:center;color:var(--muted);padding:40px">Poll not found. Check the link.</p>';
+  }
+}
+
+function confirmNick() {
+  const nick=document.getElementById('voterNick').value.trim();
+  if(!nick){toast('Enter your nickname');return;}
+  vNick=nick;
+  localStorage.setItem('candid-nick-'+vPollId,nick);
+  document.getElementById('nickWrap').style.display='none';
+  renderVoteQuestions(false);
+}
+
+function renderVoteQuestions(readOnly) {
+  const area=document.getElementById('voteQuestions');
+  area.style.display=''; area.innerHTML=''; vSelections={};
+  const storedVotes=readOnly?JSON.parse(localStorage.getItem('candid-voted-'+vPollId)||'{}'):{};
+
+  vPollData.questions.forEach((q,qi)=>{
+    const div=document.createElement('div');
+    div.className='vq'; div.style.animationDelay=(qi*.07)+'s';
+    const opts=q.options.map((o,oi)=>{
+      const isSel=readOnly&&storedVotes[q.id]===oi;
+      return `<button class="opt-btn ${isSel?'sel':''}" ${readOnly?'disabled':''} onclick="pickOpt('${q.id}',${oi},this)">
+        <span class="odot"><span class="ochk">✓</span></span>${esc(o)}</button>`;
+    }).join('');
+    div.innerHTML=`<div class="vq-title">${qi+1}. ${esc(q.text)}</div>${opts}`;
+    area.appendChild(div);
+  });
+
+  if(!readOnly) document.getElementById('submitBtn').style.display='';
+}
+
+function pickOpt(qid,oi,btn) {
+  vSelections[qid]=oi;
+  btn.closest('.vq').querySelectorAll('.opt-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  const rect=btn.getBoundingClientRect();
+  const rip=document.createElement('span'); rip.className='ripple';
+  const sz=Math.max(rect.width,rect.height)*1.4;
+  rip.style.cssText=`width:${sz}px;height:${sz}px;left:${(rect.width/2)-(sz/2)}px;top:${(rect.height/2)-(sz/2)}px`;
+  btn.appendChild(rip); rip.addEventListener('animationend',()=>rip.remove());
+  if(navigator.vibrate) navigator.vibrate(5);
+}
+
+async function submitVote() {
+  const unanswered=vPollData.questions.filter(q=>vSelections[q.id]===undefined);
+  if(unanswered.length){toast(`Answer all ${vPollData.questions.length} questions first`);return;}
+
+  const btn=document.getElementById('submitBtn');
+  btn.disabled=true; btn.textContent='Submitting…';
+
+  try {
+    const latest=await binRead(vPollId);
+    const hash=simpleHash(vPollId+'::'+vNick);
+
+    if(latest.voterHashes&&latest.voterHashes.includes(hash)){
+      toast('You already voted with this nickname');
+      localStorage.setItem('candid-voted-'+vPollId,JSON.stringify(vSelections));
+      setTimeout(()=>openResults(vPollId),1000);
+      return;
+    }
+
+    // Only counts get stored — never names
+    Object.entries(vSelections).forEach(([qid,oi])=>{
+      if(latest.votes[qid]&&latest.votes[qid][oi]!==undefined)
+        latest.votes[qid][oi]=(parseInt(latest.votes[qid][oi])||0)+1;
+    });
+    latest.totalVotes=(parseInt(latest.totalVotes)||0)+1;
+    latest.voterHashes=[...(latest.voterHashes||[]),hash];
+
+    await binUpdate(vPollId,latest);
+    localStorage.setItem('candid-voted-'+vPollId,JSON.stringify(vSelections));
+    localStorage.setItem('candid-nick-'+vPollId,vNick);
+
+    if(navigator.vibrate) navigator.vibrate([8,40,8]);
+    toast('Vote submitted! 🎉');
+    setTimeout(()=>openResults(vPollId),700);
+  } catch(e) {
+    console.error(e); toast('Error: '+e.message);
+    btn.disabled=false; btn.textContent='Submit Vote 🗳️';
+  }
+}
+
+// ── RESULTS PAGE ──────────────────────────────────────────────────────────────
+let resInterval=null;
+
+async function openResults(pollId) {
+  showPage('results'); window._currentPollId=pollId;
+  document.getElementById('resSpinner').style.display='';
+  document.getElementById('resBody').style.display='none';
+  if(resInterval) clearInterval(resInterval);
+  await fetchResults(pollId);
+  resInterval=setInterval(()=>fetchResults(pollId),5000);
+}
+
+async function fetchResults(pollId) {
+  try {
+    const data=await binRead(pollId);
+    document.getElementById('resSpinner').style.display='none';
+    document.getElementById('resBody').style.display='';
+    document.getElementById('rTitle').textContent=data.title;
+    document.getElementById('rVoteCount').textContent=(data.totalVotes||0)+' votes';
+    renderResults(data);
+  } catch(e){ console.error(e); }
+}
+
+function renderResults(data) {
+  const area=document.getElementById('resArea'); area.innerHTML='';
+  data.questions.forEach((q,qi)=>{
+    const card=document.createElement('div');
+    card.className='res-card'; card.style.animationDelay=(qi*.08)+'s';
+    const votes=data.votes?.[q.id]||{};
+    const totals=q.options.map((_,i)=>parseInt(votes[i]||0));
+    const total=totals.reduce((a,b)=>a+b,0);
+    const maxV=Math.max(...totals,1);
+    const opts=q.options.map((o,oi)=>{
+      const cnt=totals[oi], pct=total?Math.round((cnt/total)*100):0;
+      const isTop=cnt===maxV&&cnt>0;
+      return `<div class="res-item">
+        <div class="res-row">
+          <span class="res-opt">${esc(o)} ${isTop&&total>0?'🏆':''}</span>
+          <span class="res-cnt">${cnt} vote${cnt!==1?'s':''} · ${pct}%</span>
+        </div>
+        <div class="res-track"><div class="res-fill ${isTop?'top':''}" style="width:${pct}%"></div></div>
+      </div>`;
+    }).join('');
+    card.innerHTML=`<div class="res-qtitle">${qi+1}. ${esc(q.text)}</div>${total===0?'<p style="font-size:13px;color:var(--muted);text-align:center;padding:12px 0">No votes yet</p>':opts}`;
+    area.appendChild(card);
+  });
+}
+
+// ── ROUTER ────────────────────────────────────────────────────────────────────
+function route() {
+  const p=new URLSearchParams(location.search);
+  const pollId=p.get('poll'), view=p.get('view');
+  if(pollId&&view==='results') openResults(pollId);
+  else if(pollId) loadVotePage(pollId);
+  else {
+    showPage('home');
+    if(!isKeySet()) document.getElementById('notConfigured').style.display='';
+    addQuestion('',['','']);
+    loadMyPolls();
+  }
+}
+
+route();
+</script>
+</body>
+</html>
