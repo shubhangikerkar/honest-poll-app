@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RouteSync — Live GPS Transit</title>
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
+
+<style>
+:root {
+  --bg:       #070810;
+  --surf:     #0f1118;
+  --surf2:    #161922;
+  --surf3:    #1e2230;
+  --border:   rgba(255,255,255,0.07);
+  --border2:  rgba(255,255,255,0.12);
+  --accent:   #00e5ff;
+  --accent2:  #7c5cfc;
+  --green:    #00d48a;
+  --warn:     #ff6b35;
+  --red:      #ff3d5a;
+  --yellow:   #ffc82e;
+  --text:     #e8eaf2;
+  --muted:    #64748b;
+  --muted2:   #94a3b8;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ── AMBIENT BG ── */
+body::before{
+  content:'';
+  position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 90% 60% at 10% 0%,   rgba(0,229,255,0.04) 0%,transparent 55%),
+    radial-gradient(ellipse 70% 50% at 90% 90%,  rgba(124,92,252,0.05) 0%,transparent 55%),
+    radial-gradient(ellipse 50% 40% at 50% 50%,  rgba(0,212,138,0.02) 0%,transparent 60%);
+}
+/* subtle dot grid */
+body::after{
+  content:'';
+  position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size:28px 28px;
+  mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 40%,transparent 100%);
+}
+
+/* ── NAV ── */
+nav{
+  position:sticky;top:0;z-index:300;
+  height:62px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 1.5rem;
+  background:rgba(7,8,16,0.88);
+  backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--border);
+}
+.logo{
+  font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;
+  display:flex;align-items:center;gap:9px;letter-spacing:-0.02em;
+}
+.logo-icon{
+  width:30px;height:30px;border-radius:8px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.9rem;
+  box-shadow:0 0 16px rgba(0,229,255,0.35);
+  animation:logo-glow 3s ease-in-out infinite;
+}
+@keyframes logo-glow{0%,100%{box-shadow:0 0 10px rgba(0,229,255,0.3)}50%{box-shadow:0 0 24px rgba(0,229,255,0.6)}}
+
+.tabs{
+  display:flex;gap:3px;
+  background:var(--surf);
+  border:1px solid var(--border);
+  border-radius:12px;padding:4px;
+}
+.tab{
+  padding:6px 16px;border-radius:8px;border:none;
+  font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;
+  cursor:pointer;transition:all 0.2s;
+  color:var(--muted2);background:transparent;
+  display:flex;align-items:center;gap:6px;
+  white-space:nowrap;
+}
+.tab.active{background:var(--surf3);color:var(--text);box-shadow:0 2px 10px rgba(0,0,0,0.5);}
+.tab:hover:not(.active){color:var(--text);}
+.tab-badge{
+  background:var(--warn);color:#fff;
+  font-size:0.65rem;font-weight:700;
+  min-width:16px;height:16px;border-radius:8px;
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:0 4px;
+  animation:pop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+
+/* ── PAGES ── */
+.page{display:none;position:relative;z-index:1;}
+.page.active{display:block;animation:fadeUp 0.38s ease forwards;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.container{max-width:1060px;margin:0 auto;padding:2.5rem 1.5rem;}
+
+/* ── SECTION HEADING ── */
+.pg-header{margin-bottom:2rem;}
+.pg-tag{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(0,229,255,0.08);border:1px solid rgba(0,229,255,0.18);
+  color:var(--accent);padding:3px 11px;border-radius:20px;
+  font-size:0.72rem;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;
+  margin-bottom:10px;
+}
+.pg-header h1{font-family:'Syne',sans-serif;font-size:1.9rem;font-weight:800;line-height:1.1;letter-spacing:-0.02em;}
+.pg-header p{color:var(--muted2);margin-top:5px;font-size:0.9rem;}
+
+/* ── CARDS ── */
+.card{
+  background:var(--surf);
+  border:1px solid var(--border);
+  border-radius:18px;padding:1.5rem;
+  box-shadow:0 4px 30px rgba(0,0,0,0.25);
+}
+.card+.card{margin-top:1rem;}
+.card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;margin-bottom:1.1rem;display:flex;align-items:center;gap:7px;}
+
+/* ── FORM ── */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;}
+.fgroup{display:flex;flex-direction:column;gap:5px;}
+.fgroup.full{grid-column:1/-1;}
+label{font-size:0.73rem;font-weight:600;color:var(--muted2);letter-spacing:0.05em;text-transform:uppercase;}
+input,select,textarea{
+  background:var(--surf2);
+  border:1px solid var(--border2);
+  border-radius:9px;padding:9px 13px;
+  color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.92rem;
+  transition:border-color 0.2s,box-shadow 0.2s;outline:none;
+}
+input:focus,select:focus{
+  border-color:rgba(0,229,255,0.45);
+  box-shadow:0 0 0 3px rgba(0,229,255,0.07);
+}
+select option{background:var(--surf2);}
+
+/* ── BUTTONS ── */
+.btn{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:10px 20px;border-radius:9px;border:none;
+  font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:600;
+  cursor:pointer;transition:all 0.18s;position:relative;overflow:hidden;
+  white-space:nowrap;
+}
+.btn:active{transform:scale(0.96);}
+.btn-primary{background:var(--accent);color:#000;box-shadow:0 4px 18px rgba(0,229,255,0.28);}
+.btn-primary:hover{box-shadow:0 6px 26px rgba(0,229,255,0.48);}
+.btn-green{background:var(--green);color:#000;box-shadow:0 4px 18px rgba(0,212,138,0.28);}
+.btn-green:hover{box-shadow:0 6px 26px rgba(0,212,138,0.48);}
+.btn-warn{background:var(--warn);color:#fff;box-shadow:0 4px 18px rgba(255,107,53,0.28);}
+.btn-warn:hover{box-shadow:0 6px 26px rgba(255,107,53,0.48);}
+.btn-ghost{background:var(--surf2);color:var(--text);border:1px solid var(--border2);}
+.btn-ghost:hover{border-color:rgba(255,255,255,0.18);}
+.btn-danger{background:var(--red);color:#fff;box-shadow:0 4px 18px rgba(255,61,90,0.28);}
+.btn-row{display:flex;gap:8px;margin-top:1.1rem;flex-wrap:wrap;}
+
+/* ── STATS ROW ── */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1.5rem;}
+.stat{
+  background:var(--surf);border:1px solid var(--border);
+  border-radius:14px;padding:.9rem 1rem;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+}
+.stat-num{font-family:'Syne',sans-serif;font-size:1.55rem;font-weight:800;}
+.stat-lbl{font-size:0.7rem;color:var(--muted2);text-transform:uppercase;letter-spacing:.05em;font-weight:600;}
+
+/* ── LIVE LOC PANEL ── */
+.loc-row{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--surf2);border:1px solid var(--border);
+  border-radius:11px;padding:11px 15px;gap:1rem;flex-wrap:wrap;
+}
+.loc-signal{display:flex;align-items:center;gap:9px;font-size:0.88rem;}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:background .3s;}
+.dot.live{background:var(--green);box-shadow:0 0 10px var(--green);animation:pulse-dot 1.4s infinite;}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.35}}
+.coords-text{font-size:0.76rem;color:var(--muted2);font-family:monospace;margin-top:4px;}
+
+/* ── ACTIVE DRIVE STRIP ── */
+.active-strip{
+  background:linear-gradient(120deg,rgba(0,229,255,0.06),rgba(124,92,252,0.06));
+  border:1px solid rgba(0,229,255,0.18);
+  border-radius:18px;padding:1.25rem 1.5rem;margin-top:1rem;
+}
+.as-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:.85rem;flex-wrap:wrap;gap:.5rem;}
+.live-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(0,212,138,0.14);border:1px solid rgba(0,212,138,0.3);
+  color:var(--green);padding:3px 11px;border-radius:20px;
+  font-size:0.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+}
+.live-badge::before{content:'●';animation:pulse-dot 1.4s infinite;}
+.as-route{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;letter-spacing:-.02em;}
+.as-meta{display:flex;gap:1.5rem;flex-wrap:wrap;margin-top:.6rem;}
+.am-item{display:flex;flex-direction:column;gap:1px;}
+.am-lbl{font-size:.7rem;color:var(--muted2);text-transform:uppercase;letter-spacing:.05em;font-weight:600;}
+.am-val{font-size:.88rem;font-weight:500;}
+
+/* ── PROGRESS ── */
+.prog-wrap{margin-top:1rem;}
+.prog-track{background:var(--surf2);border-radius:6px;height:5px;overflow:hidden;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:6px;transition:width 1.5s ease;}
+.prog-label{font-size:.75rem;color:var(--muted2);margin-top:5px;}
+
+/* ── RIDE CARDS ── */
+.rides-grid{display:grid;gap:.85rem;}
+.ride-card{
+  background:var(--surf);border:1px solid var(--border);
+  border-radius:15px;padding:1.1rem 1.25rem;
+  cursor:pointer;transition:all .22s;
+  position:relative;overflow:hidden;
+}
+.ride-card::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:linear-gradient(180deg,var(--accent),var(--accent2));
+  border-radius:0 2px 2px 0;
+}
+.ride-card:hover{
+  border-color:rgba(0,229,255,0.22);
+  transform:translateY(-2px);
+  box-shadow:0 10px 32px rgba(0,0,0,0.35);
+}
+.rc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;}
+.rc-route{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;}
+.rc-meta{display:flex;gap:1.25rem;margin-top:.65rem;flex-wrap:wrap;}
+.pill{
+  padding:3px 9px;border-radius:20px;
+  font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+}
+.pill-green{background:rgba(0,212,138,.13);color:var(--green);border:1px solid rgba(0,212,138,.28);}
+.pill-blue{background:rgba(0,229,255,.1);color:var(--accent);border:1px solid rgba(0,229,255,.2);}
+.pill-warn{background:rgba(255,107,53,.13);color:var(--warn);border:1px solid rgba(255,107,53,.28);animation:flash 1.6s infinite;}
+.pill-red{background:rgba(255,61,90,.13);color:var(--red);border:1px solid rgba(255,61,90,.28);}
+@keyframes flash{0%,100%{opacity:1}50%{opacity:.5}}
+.rc-hint{font-size:.75rem;color:var(--muted2);margin-top:.65rem;display:flex;align-items:center;gap:6px;}
+
+/* ── MAP MODAL ── */
+.overlay{
+  position:fixed;inset:0;z-index:400;
+  background:rgba(0,0,0,0.82);
+  backdrop-filter:blur(10px);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .3s;
+  padding:1rem;
+}
+.overlay.open{opacity:1;pointer-events:all;}
+.modal{
+  background:var(--surf);
+  border:1px solid var(--border2);
+  border-radius:22px;
+  width:min(720px,100%);
+  max-height:92vh;
+  display:flex;flex-direction:column;
+  transform:scale(.92) translateY(22px);
+  transition:transform .38s cubic-bezier(.34,1.5,.64,1);
+  overflow:hidden;
+  box-shadow:0 30px 80px rgba(0,0,0,.6);
+}
+.overlay.open .modal{transform:scale(1) translateY(0);}
+.modal-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1.1rem 1.4rem;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.modal-head h3{font-family:'Syne',sans-serif;font-weight:700;font-size:1.05rem;}
+.modal-close{
+  width:30px;height:30px;border-radius:7px;
+  background:var(--surf2);border:1px solid var(--border2);
+  cursor:pointer;color:var(--muted2);font-size:1rem;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .18s;
+}
+.modal-close:hover{color:var(--text);border-color:var(--border2);}
+.modal-body{overflow-y:auto;padding:1.25rem;}
+
+/* ── LEAFLET MAP ── */
+#live-map{
+  height:340px;border-radius:14px;overflow:hidden;
+  border:1px solid var(--border);
+  margin-bottom:1.1rem;
+  position:relative;
+}
+/* dark tile filter */
+.leaflet-tile{filter:brightness(.85) saturate(.8) hue-rotate(180deg) invert(1);}
+.leaflet-container{background:#0f1118!important;}
+
+/* custom bus icon */
+.bus-icon{
+  width:38px;height:38px;background:var(--accent);
+  border-radius:50%;border:3px solid #fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;
+  box-shadow:0 0 0 0 rgba(0,229,255,.7);
+  animation:sonar 2s infinite;
+}
+@keyframes sonar{
+  0%{box-shadow:0 0 0 0 rgba(0,229,255,.7)}
+  70%{box-shadow:0 0 0 22px rgba(0,229,255,0)}
+  100%{box-shadow:0 0 0 0 rgba(0,229,255,0)}
+}
+
+/* ── MAP INFO ROW ── */
+.map-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:.65rem;margin-bottom:1rem;}
+.ms-item{background:var(--surf2);border:1px solid var(--border);border-radius:10px;padding:.7rem .8rem;}
+.ms-lbl{font-size:.68rem;color:var(--muted2);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:3px;}
+.ms-val{font-size:.95rem;font-weight:600;}
+
+/* ── NOTIFICATION PAGE ── */
+.notif-types-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.7rem;margin-bottom:1rem;}
+@media(min-width:500px){.notif-types-grid{grid-template-columns:repeat(4,1fr);}}
+.ntype{
+  padding:12px 8px;border-radius:12px;
+  border:2px solid var(--border);
+  background:var(--surf2);
+  cursor:pointer;transition:all .2s;
+  text-align:center;color:var(--muted2);
+  font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:600;
+}
+.ntype .ni{font-size:1.35rem;display:block;margin-bottom:4px;}
+.ntype:hover{border-color:rgba(255,255,255,.15);color:var(--text);}
+.ntype.sel-cyan{border-color:var(--accent);background:rgba(0,229,255,.07);color:var(--accent);}
+.ntype.sel-warn{border-color:var(--warn);background:rgba(255,107,53,.07);color:var(--warn);}
+.ntype.sel-red{border-color:var(--red);background:rgba(255,61,90,.07);color:var(--red);}
+.ntype.sel-green{border-color:var(--green);background:rgba(0,212,138,.07);color:var(--green);}
+
+.notif-list{display:flex;flex-direction:column;gap:.75rem;}
+.ni-card{
+  background:var(--surf);border:1px solid var(--border);
+  border-radius:14px;padding:1rem 1.1rem;
+  display:flex;gap:.9rem;align-items:flex-start;
+  opacity:0;transform:translateX(-18px);
+  animation:slideIn .4s cubic-bezier(.34,1.3,.64,1) forwards;
+}
+@keyframes slideIn{to{opacity:1;transform:translateX(0)}}
+.ni-icon{
+  width:40px;height:40px;border-radius:11px;
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.1rem;
+}
+.ni-body h4{font-weight:600;font-size:.88rem;margin-bottom:2px;}
+.ni-body p{font-size:.8rem;color:var(--muted2);line-height:1.4;}
+.ni-time{font-size:.7rem;color:var(--muted);margin-top:4px;}
+
+/* ── TOAST ── */
+#toasts{position:fixed;top:74px;right:16px;z-index:600;display:flex;flex-direction:column;gap:7px;}
+.toast{
+  background:var(--surf);border:1px solid var(--border2);
+  border-radius:11px;padding:10px 16px;
+  display:flex;align-items:center;gap:9px;font-size:.85rem;
+  box-shadow:0 8px 28px rgba(0,0,0,.5);max-width:280px;
+  animation:tIn .3s cubic-bezier(.34,1.3,.64,1) forwards;
+}
+@keyframes tIn{from{opacity:0;transform:translateX(50px)}to{opacity:1;transform:translateX(0)}}
+.toast.out{animation:tOut .25s ease forwards;}
+@keyframes tOut{to{opacity:0;transform:translateX(50px)}}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:3rem 1rem;color:var(--muted);}
+.empty-ico{font-size:2.4rem;margin-bottom:.65rem;opacity:.35;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:580px){
+  .form-grid{grid-template-columns:1fr;}
+  .fgroup.full{grid-column:1;}
+  .stats-row{grid-template-columns:repeat(3,1fr);}
+  .map-stats{grid-template-columns:repeat(2,1fr);}
+  .tabs .tab span.tab-txt{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">
+    <div class="logo-icon">🚌</div>
+    RouteSync
+  </div>
+  <div class="tabs">
+    <button class="tab active" id="tab-driver"      onclick="goPage('driver',this)">🚌 <span class="tab-txt">Driver</span></button>
+    <button class="tab"        id="tab-passenger"   onclick="goPage('passenger',this)">👤 <span class="tab-txt">Passenger</span></button>
+    <button class="tab"        id="tab-notifications" onclick="goPage('notifications',this)">🔔 <span class="tab-txt">Alerts</span><span id="notif-badge" style="display:none" class="tab-badge">0</span></button>
+  </div>
+</nav>
+<div id="toasts"></div>
+
+<!-- ══════════ DRIVER ══════════ -->
+<div class="page active" id="page-driver">
+<div class="container">
+
+  <div class="pg-header">
+    <div class="pg-tag">⚡ Driver Dashboard</div>
+    <h1>Manage Your Drive</h1>
+    <p>Create a drive and broadcast your real GPS location live to passengers</p>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat"><div class="stat-num" id="s-drives" style="color:var(--accent)">0</div><div class="stat-lbl">Active Drives</div></div>
+    <div class="stat"><div class="stat-num" id="s-pass"   style="color:var(--accent2)">0</div><div class="stat-lbl">Tracking</div></div>
+    <div class="stat"><div class="stat-num" id="s-alerts" style="color:var(--warn)">0</div><div class="stat-lbl">Alerts Sent</div></div>
+  </div>
+
+  <!-- Create Form -->
+  <div class="card" id="drive-form">
+    <div class="card-title">🗺️ Create New Drive</div>
+    <div class="form-grid">
+      <div class="fgroup"><label>Driver Name</label><input id="f-name" placeholder="Your full name"/></div>
+      <div class="fgroup"><label>Vehicle / Bus ID</label><input id="f-bus" placeholder="e.g. BUS-42"/></div>
+      <div class="fgroup"><label>From</label><input id="f-from" placeholder="Starting stop"/></div>
+      <div class="fgroup"><label>To</label><input id="f-to" placeholder="Destination stop"/></div>
+      <div class="fgroup"><label>Departure Time</label><input type="time" id="f-time"/></div>
+      <div class="fgroup"><label>Route No.</label><input id="f-route" placeholder="e.g. R-7"/></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="createDrive()">🚀 Start Drive</button>
+      <button class="btn btn-ghost" onclick="fillDemo()">Fill Demo</button>
+    </div>
+  </div>
+
+  <!-- Active Drive -->
+  <div id="drive-active" style="display:none">
+    <div class="active-strip">
+      <div class="as-top">
+        <span class="live-badge">Live</span>
+        <button class="btn btn-danger" style="padding:6px 14px;font-size:.8rem" onclick="endDrive()">End Drive</button>
+      </div>
+      <div class="as-route" id="ad-route">—</div>
+      <div class="as-meta">
+        <div class="am-item"><div class="am-lbl">Driver</div><div class="am-val" id="ad-name">—</div></div>
+        <div class="am-item"><div class="am-lbl">Vehicle</div><div class="am-val" id="ad-bus">—</div></div>
+        <div class="am-item"><div class="am-lbl">Departure</div><div class="am-val" id="ad-time">—</div></div>
+        <div class="am-item"><div class="am-lbl">Route</div><div class="am-val" id="ad-rno">—</div></div>
+      </div>
+      <div class="prog-wrap">
+        <div class="prog-track"><div class="prog-fill" id="ad-prog" style="width:2%"></div></div>
+        <div class="prog-label" id="ad-prog-lbl">Waiting for GPS…</div>
+      </div>
+    </div>
+
+    <!-- Live Location -->
+    <div class="card" style="margin-top:1rem">
+      <div class="card-title">📡 GPS Location Broadcast</div>
+      <div class="loc-row">
+        <div class="loc-signal">
+          <div class="dot" id="loc-dot"></div>
+          <div>
+            <div id="loc-status">Not broadcasting</div>
+            <div class="coords-text" id="loc-coords">—</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-green" id="btn-loc-start" onclick="startGPS()">📍 Start GPS</button>
+          <button class="btn btn-ghost" id="btn-loc-stop" style="display:none" onclick="stopGPS()">⏹ Stop</button>
+        </div>
+      </div>
+      <div id="gps-error" style="display:none;margin-top:.75rem;padding:10px 14px;background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.25);border-radius:9px;font-size:.84rem;color:var(--warn)"></div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ══════════ PASSENGER ══════════ -->
+<div class="page" id="page-passenger">
+<div class="container">
+
+  <div class="pg-header">
+    <div class="pg-tag">🗺️ Passenger View</div>
+    <h1>Available Drives</h1>
+    <p>Tap any drive to open live GPS tracking on the map</p>
+  </div>
+
+  <div id="rides-wrap">
+    <div class="empty"><div class="empty-ico">🚌</div><p>No active drives yet.<br>Ask your driver to start one.</p></div>
+  </div>
+
+</div>
+</div>
+
+<!-- ══════════ NOTIFICATIONS ══════════ -->
+<div class="page" id="page-notifications">
+<div class="container">
+
+  <div class="pg-header">
+    <div class="pg-tag">🔔 Driver Alerts</div>
+    <h1>Broadcast Alerts</h1>
+    <p>Instantly notify all passengers about disruptions</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📢 Send Alert to Passengers</div>
+    <div class="notif-types-grid">
+      <div class="ntype sel-warn" data-t="breakdown" onclick="pickType(this)"><span class="ni">🔧</span>Breakdown</div>
+      <div class="ntype" data-t="delay"     onclick="pickType(this)"><span class="ni">⏱</span>Delay</div>
+      <div class="ntype" data-t="cancelled" onclick="pickType(this)"><span class="ni">🚫</span>Cancelled</div>
+      <div class="ntype" data-t="ok"        onclick="pickType(this)"><span class="ni">✅</span>Back on Track</div>
+    </div>
+    <div class="fgroup">
+      <label>Extra Message (optional)</label>
+      <input id="notif-msg" placeholder="Add details…"/>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-warn" onclick="sendAlert()">📡 Broadcast Alert</button>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin:1.5rem 0 .75rem">
+    <div style="font-family:'Syne',sans-serif;font-weight:700">Broadcast History</div>
+    <button class="btn btn-ghost" style="padding:5px 12px;font-size:.78rem" onclick="clearAlerts()">Clear All</button>
+  </div>
+  <div class="notif-list" id="notif-list">
+    <div class="empty"><div class="empty-ico">🔕</div><p>No alerts sent yet.</p></div>
+  </div>
+
+</div>
+</div>
+
+<!-- ══════════ MAP MODAL ══════════ -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modal-title">Live Tracking</h3>
+      <div class="modal-close" onclick="closeMap()">✕</div>
+    </div>
+    <div class="modal-body">
+      <div id="live-map"></div>
+      <div class="map-stats">
+        <div class="ms-item"><div class="ms-lbl">Status</div><div class="ms-val" id="ms-status" style="color:var(--green)">—</div></div>
+        <div class="ms-item"><div class="ms-lbl">Coordinates</div><div class="ms-val" id="ms-coords" style="font-size:.78rem;font-family:monospace">—</div></div>
+        <div class="ms-item"><div class="ms-lbl">Accuracy</div><div class="ms-val" id="ms-acc">—</div></div>
+        <div class="ms-item"><div class="ms-lbl">Last Update</div><div class="ms-val" id="ms-updated">—</div></div>
+      </div>
+      <div class="prog-wrap">
+        <div class="prog-track"><div class="prog-fill" id="modal-prog" style="width:2%"></div></div>
+        <div class="prog-label" id="modal-prog-lbl">Waiting for driver GPS…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+let drives = [];
+let activeDrive = null;
+let alerts = [];
+let alertBadge = 0;
+let selectedAlertType = 'breakdown';
+
+// GPS state
+let watchId = null;
+let isGPSLive = false;
+let liveCoords = null;      // {lat, lng, acc, ts}
+let coordHistory = [];      // trail of coords
+
+// Map objects
+let leafletMap = null;
+let busMarkerLeaf = null;
+let trailPolyline = null;
+let mapOpenDriveId = null;
+let mapUpdateInterval = null;
+
+// ═══════════════════════════════════════════
+//  NAV
+// ═══════════════════════════════════════════
+function goPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  el.classList.add('active');
+  if (name === 'notifications') clearBadge();
+}
+
+// ═══════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════
+function showToast(msg, icon = '✅', borderColor = null) {
+  const wrap = document.getElementById('toasts');
+  const el = document.createElement('div');
+  el.className = 'toast';
+  if (borderColor) el.style.borderColor = borderColor;
+  el.innerHTML = `<span>${icon}</span><span>${msg}</span>`;
+  wrap.appendChild(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 280); }, 3200);
+}
+
+// ═══════════════════════════════════════════
+//  DRIVER — CREATE / END DRIVE
+// ═══════════════════════════════════════════
+function fillDemo() {
+  document.getElementById('f-name').value  = 'Arjun Mehta';
+  document.getElementById('f-bus').value   = 'BUS-07';
+  document.getElementById('f-from').value  = 'Central Station';
+  document.getElementById('f-to').value    = 'Airport Terminal 2';
+  document.getElementById('f-time').value  = '14:30';
+  document.getElementById('f-route').value = 'R-12';
+  showToast('Demo data filled!', '✏️');
+}
+
+function createDrive() {
+  const name  = v('f-name');
+  const bus   = v('f-bus') || 'BUS-?';
+  const from  = v('f-from');
+  const to    = v('f-to');
+  const time  = v('f-time');
+  const route = v('f-route');
+
+  if (!name || !from || !to) {
+    showToast('Please fill Driver, From and To fields!', '⚠️', 'var(--warn)'); return;
+  }
+
+  const drive = { id: Date.now(), name, bus, from, to, time, route,
+                  status: 'active', created: new Date() };
+  drives.push(drive);
+  activeDrive = drive;
+
+  document.getElementById('drive-form').style.display   = 'none';
+  document.getElementById('drive-active').style.display = 'block';
+  document.getElementById('ad-route').textContent = `${from} → ${to}`;
+  document.getElementById('ad-name').textContent  = name;
+  document.getElementById('ad-bus').textContent   = bus;
+  document.getElementById('ad-time').textContent  = time || '—';
+  document.getElementById('ad-rno').textContent   = route || '—';
+
+  renderRides();
+  updateStats();
+  showToast('Drive created! Passengers can now see it.', '🚌', 'var(--accent)');
+}
+
+function endDrive() {
+  if (!activeDrive) return;
+  activeDrive.status = 'ended';
+  activeDrive = null;
+  stopGPS();
+  document.getElementById('drive-form').style.display   = 'block';
+  document.getElementById('drive-active').style.display = 'none';
+  renderRides();
+  updateStats();
+  showToast('Drive ended.', '🏁');
+}
+
+function v(id) { return document.getElementById(id).value.trim(); }
+
+function updateStats() {
+  const n = drives.filter(d => d.status === 'active').length;
+  document.getElementById('s-drives').textContent = n;
+  document.getElementById('s-pass').textContent   = n ? n * Math.floor(Math.random() * 6 + 4) : 0;
+  document.getElementById('s-alerts').textContent = alerts.length;
+}
+
+// ═══════════════════════════════════════════
+//  REAL GPS  (driver side)
+// ═══════════════════════════════════════════
+function startGPS() {
+  if (!navigator.geolocation) {
+    showGPSError('Geolocation is not supported by your browser.');
+    return;
+  }
+
+  document.getElementById('btn-loc-start').style.display = 'none';
+  document.getElementById('btn-loc-stop').style.display  = 'flex';
+  document.getElementById('loc-status').textContent      = 'Acquiring GPS signal…';
+  document.getElementById('gps-error').style.display     = 'none';
+
+  const opts = { enableHighAccuracy: true, maximumAge: 3000, timeout: 12000 };
+
+  watchId = navigator.geolocation.watchPosition(
+    pos => onGPSSuccess(pos),
+    err => onGPSError(err),
+    opts
+  );
+}
+
+function onGPSSuccess(pos) {
+  isGPSLive = true;
+  liveCoords = {
+    lat: pos.coords.latitude,
+    lng: pos.coords.longitude,
+    acc: pos.coords.accuracy,
+    ts:  new Date()
+  };
+  coordHistory.push([liveCoords.lat, liveCoords.lng]);
+  if (coordHistory.length > 300) coordHistory.shift();
+
+  // Update dot & text
+  document.getElementById('loc-dot').classList.add('live');
+  document.getElementById('loc-status').textContent = '● Broadcasting live GPS';
+  document.getElementById('loc-coords').textContent =
+    `${liveCoords.lat.toFixed(6)}, ${liveCoords.lng.toFixed(6)}  ±${Math.round(liveCoords.acc)}m`;
+
+  // Update active drive progress (rough estimate based on # of position updates)
+  if (activeDrive) {
+    const pct = Math.min(coordHistory.length * 0.4, 97);
+    document.getElementById('ad-prog').style.width   = pct + '%';
+    document.getElementById('ad-prog-lbl').textContent = `GPS active · ${Math.round(pct)}% progress`;
+  }
+
+  // If map modal is open for this drive, update marker
+  if (mapOpenDriveId === activeDrive?.id && leafletMap) {
+    updateMapMarker();
+  }
+
+  document.getElementById('gps-error').style.display = 'none';
+}
+
+function onGPSError(err) {
+  let msg = 'GPS error: ' + err.message;
+  if (err.code === 1) msg = '⚠️ Location permission denied. Please allow location access in your browser settings.';
+  if (err.code === 2) msg = '⚠️ GPS position unavailable. Make sure you are outdoors or try again.';
+  if (err.code === 3) msg = '⚠️ GPS timed out. Please try again.';
+  showGPSError(msg);
+  showToast('GPS error — ' + err.message, '⚠️', 'var(--warn)');
+}
+
+function showGPSError(msg) {
+  const el = document.getElementById('gps-error');
+  el.style.display = 'block';
+  el.textContent = msg;
+}
+
+function stopGPS() {
+  if (watchId !== null) {
+    navigator.geolocation.clearWatch(watchId);
+    watchId = null;
+  }
+  isGPSLive = false;
+  document.getElementById('loc-dot').classList.remove('live');
+  document.getElementById('loc-status').textContent  = 'Not broadcasting';
+  document.getElementById('loc-coords').textContent  = '—';
+  document.getElementById('btn-loc-start').style.display = 'flex';
+  document.getElementById('btn-loc-stop').style.display  = 'none';
+}
+
+// ═══════════════════════════════════════════
+//  PASSENGER — RIDE CARDS
+// ═══════════════════════════════════════════
+function renderRides() {
+  const wrap   = document.getElementById('rides-wrap');
+  const active = drives.filter(d => d.status === 'active' || d.status === 'breakdown');
+  if (!active.length) {
+    wrap.innerHTML = `<div class="empty"><div class="empty-ico">🚌</div><p>No active drives yet.<br>Ask your driver to start one.</p></div>`;
+    return;
+  }
+  wrap.innerHTML = '<div class="rides-grid">' + active.map(d => {
+    const pill = d.status === 'breakdown'
+      ? `<span class="pill pill-warn">⚠ Breakdown</span>`
+      : `<span class="pill pill-green">● Active</span>`;
+    const gpsHint = (isGPSLive && activeDrive?.id === d.id)
+      ? `<span style="color:var(--green)">● GPS Live</span>` : `<span>Tap to open map</span>`;
+    return `
+    <div class="ride-card" onclick="openMap(${d.id})">
+      <div class="rc-top">
+        <div class="rc-route">${d.from} → ${d.to}</div>
+        ${pill}
+      </div>
+      <div class="rc-meta">
+        <div class="am-item"><div class="am-lbl">Driver</div><div class="am-val">${d.name}</div></div>
+        <div class="am-item"><div class="am-lbl">Vehicle</div><div class="am-val">${d.bus}</div></div>
+        <div class="am-item"><div class="am-lbl">Departs</div><div class="am-val">${d.time || 'Now'}</div></div>
+        <div class="am-item"><div class="am-lbl">Route</div><div class="am-val">${d.route || '—'}</div></div>
+      </div>
+      <div class="rc-hint">📍 ${gpsHint}</div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+// ═══════════════════════════════════════════
+//  LEAFLET MAP MODAL
+// ═══════════════════════════════════════════
+function openMap(driveId) {
+  const drive = drives.find(d => d.id === driveId);
+  if (!drive) return;
+  mapOpenDriveId = driveId;
+
+  document.getElementById('modal-title').textContent = `📍 ${drive.from} → ${drive.to}`;
+  document.getElementById('overlay').classList.add('open');
+
+  // Init map on next tick (modal must be visible first)
+  setTimeout(() => initLeafletMap(drive), 80);
+}
+
+function initLeafletMap(drive) {
+  // Destroy old map
+  if (leafletMap) { leafletMap.remove(); leafletMap = null; busMarkerLeaf = null; trailPolyline = null; }
+
+  clearInterval(mapUpdateInterval);
+
+  const defaultLat = liveCoords?.lat ?? 20.5937;   // India centre fallback
+  const defaultLng = liveCoords?.lng ?? 78.9629;
+
+  leafletMap = L.map('live-map', {
+    center: [defaultLat, defaultLng],
+    zoom: liveCoords ? 16 : 5,
+    zoomControl: true,
+    attributionControl: false
+  });
+
+  // Dark OSM tiles via CartoDB Dark Matter (no API key needed)
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap © CartoDB',
+    subdomains: 'abcd',
+    maxZoom: 19
+  }).addTo(leafletMap);
+
+  // Attribution small
+  L.control.attribution({ prefix: false }).addTo(leafletMap);
+  leafletMap.attributionControl.addAttribution('© <a href="https://carto.com" style="color:#888">CartoDB</a>');
+
+  // Custom bus icon
+  const busIcon = L.divIcon({
+    className: '',
+    html: `<div class="bus-icon">🚌</div>`,
+    iconSize: [38, 38],
+    iconAnchor: [19, 19]
+  });
+
+  if (liveCoords) {
+    busMarkerLeaf = L.marker([liveCoords.lat, liveCoords.lng], { icon: busIcon }).addTo(leafletMap);
+    busMarkerLeaf.bindPopup(`<b>${drive.name}</b><br>${drive.bus}<br>${drive.from} → ${drive.to}`);
+
+    // Draw trail
+    if (coordHistory.length > 1) {
+      trailPolyline = L.polyline(coordHistory, {
+        color: '#00e5ff', weight: 3, opacity: 0.65, dashArray: '6,4'
+      }).addTo(leafletMap);
+    }
+
+    updateModalStats();
+  } else {
+    // No GPS yet — show info
+    document.getElementById('ms-status').textContent  = 'Waiting for GPS…';
+    document.getElementById('ms-coords').textContent  = '—';
+    document.getElementById('ms-acc').textContent     = '—';
+    document.getElementById('ms-updated').textContent = '—';
+    L.popup().setLatLng([defaultLat, defaultLng])
+             .setContent('Waiting for driver to start GPS broadcast…')
+             .openOn(leafletMap);
+  }
+
+  // Poll for updates every 3 sec while modal is open
+  mapUpdateInterval = setInterval(() => {
+    if (liveCoords && leafletMap && busMarkerLeaf) updateMapMarker();
+  }, 3000);
+}
+
+function updateMapMarker() {
+  if (!leafletMap || !busMarkerLeaf || !liveCoords) return;
+  const ll = [liveCoords.lat, liveCoords.lng];
+  busMarkerLeaf.setLatLng(ll);
+  leafletMap.panTo(ll, { animate: true, duration: 1.2 });
+
+  // Update trail
+  if (coordHistory.length > 1) {
+    if (trailPolyline) {
+      trailPolyline.setLatLngs(coordHistory);
+    } else {
+      trailPolyline = L.polyline(coordHistory, {
+        color: '#00e5ff', weight: 3, opacity: 0.65, dashArray: '6,4'
+      }).addTo(leafletMap);
+    }
+  }
+
+  updateModalStats();
+}
+
+function updateModalStats() {
+  if (!liveCoords) return;
+  const pct = Math.min(coordHistory.length * 0.4, 97);
+  document.getElementById('ms-status').textContent   = isGPSLive ? '● Live GPS' : 'Last known';
+  document.getElementById('ms-status').style.color   = isGPSLive ? 'var(--green)' : 'var(--yellow)';
+  document.getElementById('ms-coords').textContent   = `${liveCoords.lat.toFixed(5)}, ${liveCoords.lng.toFixed(5)}`;
+  document.getElementById('ms-acc').textContent      = `±${Math.round(liveCoords.acc)} m`;
+  document.getElementById('ms-updated').textContent  = liveCoords.ts.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  document.getElementById('modal-prog').style.width  = pct + '%';
+  document.getElementById('modal-prog-lbl').textContent = `GPS tracking active · ${Math.round(pct)}% route covered`;
+}
+
+function closeMap() {
+  document.getElementById('overlay').classList.remove('open');
+  clearInterval(mapUpdateInterval);
+  mapOpenDriveId = null;
+  if (leafletMap) { leafletMap.remove(); leafletMap = null; busMarkerLeaf = null; trailPolyline = null; }
+}
+
+// Click outside modal to close
+document.getElementById('overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeMap();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMap(); });
+
+// ═══════════════════════════════════════════
+//  NOTIFICATIONS
+// ═══════════════════════════════════════════
+const ALERT_META = {
+  breakdown: { icon:'🔧', bg:'rgba(255,107,53,.14)', color:'var(--warn)',  label:'Vehicle Breakdown',    sel:'sel-warn'  },
+  delay:     { icon:'⏱', bg:'rgba(255,200,46,.12)', color:'var(--yellow)', label:'Service Delay',        sel:'sel-cyan'  },
+  cancelled: { icon:'🚫', bg:'rgba(255,61,90,.13)',  color:'var(--red)',    label:'Route Cancelled',      sel:'sel-red'   },
+  ok:        { icon:'✅', bg:'rgba(0,212,138,.12)',  color:'var(--green)',  label:'Service Resumed',      sel:'sel-green' },
+};
+
+function pickType(el) {
+  document.querySelectorAll('.ntype').forEach(b => {
+    b.classList.remove('sel-cyan','sel-warn','sel-red','sel-green');
+  });
+  selectedAlertType = el.dataset.t;
+  el.classList.add(ALERT_META[selectedAlertType].sel);
+}
+
+function sendAlert() {
+  const msg   = document.getElementById('notif-msg').value.trim();
+  const meta  = ALERT_META[selectedAlertType];
+  const route = activeDrive ? `${activeDrive.from} → ${activeDrive.to}` : 'Unknown Route';
+  const driver= activeDrive?.name || 'Driver';
+
+  const alert = {
+    id: Date.now(), type: selectedAlertType, meta,
+    driver, route,
+    msg: msg || `${meta.label} reported on ${route}`,
+    time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+  };
+  alerts.unshift(alert);
+
+  if (activeDrive && (selectedAlertType === 'breakdown' || selectedAlertType === 'cancelled')) {
+    activeDrive.status = 'breakdown';
+  } else if (activeDrive && selectedAlertType === 'ok') {
+    activeDrive.status = 'active';
+  }
+
+  renderAlerts();
+  renderRides();
+  bumpBadge();
+  updateStats();
+  document.getElementById('notif-msg').value = '';
+  showToast(`Alert broadcast: ${meta.label}`, meta.icon, meta.color);
+}
+
+function renderAlerts() {
+  const list = document.getElementById('notif-list');
+  if (!alerts.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-ico">🔕</div><p>No alerts sent yet.</p></div>`;
+    return;
+  }
+  list.innerHTML = alerts.map((a, i) => `
+    <div class="ni-card" style="animation-delay:${i * 0.045}s">
+      <div class="ni-icon" style="background:${a.meta.bg}">${a.meta.icon}</div>
+      <div class="ni-body">
+        <h4>${a.meta.label}</h4>
+        <p>${a.msg}</p>
+        <div class="ni-time">🕒 ${a.time} · ${a.driver} · ${a.route}</div>
+      </div>
+    </div>`).join('');
+}
+
+function clearAlerts() {
+  alerts = [];
+  renderAlerts();
+  clearBadge();
+  updateStats();
+}
+
+function bumpBadge() {
+  alertBadge++;
+  const b = document.getElementById('notif-badge');
+  b.textContent = alertBadge;
+  b.style.display = 'inline-flex';
+  b.className = 'tab-badge'; // retrigger animation
+  void b.offsetWidth;
+}
+
+function clearBadge() {
+  alertBadge = 0;
+  document.getElementById('notif-badge').style.display = 'none';
+}
+</script>
+</body>
+</html>
