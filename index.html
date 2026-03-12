@@ -153,9 +153,10 @@ select option{background:var(--surf2);}
   border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-size:.95rem;
   animation:sonar 2s infinite;}
 @keyframes sonar{0%{box-shadow:0 0 0 0 rgba(0,229,255,.7)}70%{box-shadow:0 0 0 20px rgba(0,229,255,0)}100%{box-shadow:0 0 0 0 rgba(0,229,255,0)}}
-.you-icon-wrap{width:28px;height:28px;background:#7c5cfc;border-radius:50%;
-  border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-size:.75rem;
-  box-shadow:0 0 12px rgba(124,92,252,.6);}
+.you-icon-wrap{width:38px;height:38px;background:#7c5cfc;border-radius:50%;
+  border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-size:1rem;
+  box-shadow:0 0 0 0 rgba(124,92,252,.7);animation:you-pulse 2.2s infinite;}
+@keyframes you-pulse{0%{box-shadow:0 0 0 0 rgba(124,92,252,.7)}70%{box-shadow:0 0 0 16px rgba(124,92,252,0)}100%{box-shadow:0 0 0 0 rgba(124,92,252,0)}}
 .map-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:.6rem;margin-bottom:.9rem;}
 @media(min-width:480px){.map-stats{grid-template-columns:repeat(4,1fr);}}
 .ms{background:var(--surf2);border:1px solid var(--border);border-radius:10px;padding:.65rem .8rem;}
@@ -528,18 +529,42 @@ window.stopGPS = () => {
 // ── PASSENGER GPS
 window.startPassengerGPS = () => {
   if(!navigator.geolocation){ toast('Geolocation not supported','⚠️'); return; }
-  document.getElementById('btn-pass-gps').textContent='Getting location…';
+  const btn = document.getElementById('btn-pass-gps');
+  btn.textContent='Getting location…';
+  btn.disabled = true;
+
   passWatchId = navigator.geolocation.watchPosition(pos=>{
     passCoords={ lat:pos.coords.latitude, lng:pos.coords.longitude };
-    document.getElementById('pass-loc-txt').textContent=
-      `📍 ${passCoords.lat.toFixed(5)}, ${passCoords.lng.toFixed(5)}`;
-    document.getElementById('btn-pass-gps').textContent='✓ Location Active';
-    document.getElementById('btn-pass-gps').style.color='var(--green)';
+
+    // Update UI bar
+    document.getElementById('pass-loc-txt').innerHTML=
+      `📍 <span style="font-family:monospace">${passCoords.lat.toFixed(5)}, ${passCoords.lng.toFixed(5)}</span>`;
+    btn.textContent='✓ Your Location Active';
+    btn.style.color='var(--green)';
+    btn.style.borderColor='var(--green)';
+    btn.disabled = false;
+
+    // Refresh ride cards to show distances
     renderRides();
-    if(leafletMap && mapDriveId) updateMapLayers();
-  }, err=>{ toast('Location error: '+err.message,'⚠️','var(--warn)'); },
-  { enableHighAccuracy:true, maximumAge:5000, timeout:12000 });
+
+    // If map modal is open — place/move your marker immediately
+    if(leafletMap && mapDriveId){
+      placeYouMarker();
+      updateMapLayers();
+    }
+  },
+  err=>{
+    btn.disabled = false;
+    let m = err.message;
+    if(err.code===1) m='Permission denied. Tap your browser address bar and allow location.';
+    if(err.code===2) m='Position unavailable. Try outdoors or check GPS settings.';
+    if(err.code===3) m='GPS timed out. Please try again.';
+    btn.textContent='Enable My Location';
+    toast('Location error: '+m,'⚠️','var(--warn)');
+  },
+  { enableHighAccuracy:true, maximumAge:3000, timeout:15000 });
 };
+
 
 // ── RENDER RIDES
 function renderRides() {
@@ -596,13 +621,46 @@ window.openMap = driveId => {
 function initMap(drive){
   if(leafletMap){ leafletMap.remove(); leafletMap=null; busMarker=null; youMarker=null; trailLine=null; distLine=null; }
   clearInterval(mapInterval);
-  const cLat=drive.lat??(passCoords?.lat??20.5937);
-  const cLng=drive.lng??(passCoords?.lng??78.9629);
-  leafletMap=L.map('live-map',{ center:[cLat,cLng], zoom:drive.lat?15:5 });
+
+  // Best center: bus → passenger → world fallback
+  const cLat = drive.lat ?? passCoords?.lat ?? 20.5937;
+  const cLng = drive.lng ?? passCoords?.lng ?? 78.9629;
+  const zoom  = (drive.lat || passCoords) ? 15 : 5;
+
+  leafletMap = L.map('live-map', { center:[cLat,cLng], zoom });
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
     { subdomains:'abcd', maxZoom:19 }).addTo(leafletMap);
+
+  // Place YOUR marker immediately if GPS was already granted
+  placeYouMarker();
   updateMapLayers(drive);
-  mapInterval=setInterval(()=>{ const d=drivesCache[mapDriveId]; if(d) updateMapLayers(d); },4000);
+
+  // Poll every 3 s for bus updates + keep your marker current
+  mapInterval = setInterval(()=>{
+    placeYouMarker();
+    const d = drivesCache[mapDriveId];
+    if(d) updateMapLayers(d);
+  }, 3000);
+}
+
+// Separate helper — always safe to call
+function placeYouMarker(){
+  if(!leafletMap || !passCoords) return;
+  const yll = [passCoords.lat, passCoords.lng];
+  if(!youMarker){
+    youMarker = L.marker(yll, {
+      icon: L.divIcon({
+        className:'',
+        iconSize:[38,38],
+        iconAnchor:[19,19],
+        html:`<div class="you-icon-wrap" style="width:38px;height:38px;font-size:1rem;">👤</div>`
+      }),
+      zIndexOffset: 1000
+    }).addTo(leafletMap);
+    youMarker.bindPopup('<b>📍 You are here</b>');
+  } else {
+    youMarker.setLatLng(yll);
+  }
 }
 
 function updateMapLayers(drive){
@@ -610,17 +668,17 @@ function updateMapLayers(drive){
   if(!drive) drive=drivesCache[mapDriveId];
   if(!drive) return;
 
-  // BUS
-  if(drive.lat!=null&&drive.lng!=null){
-    const ll=[drive.lat,drive.lng];
+  // ── BUS MARKER
+  if(drive.lat!=null && drive.lng!=null){
+    const ll=[drive.lat, drive.lng];
     if(!busMarker){
       busMarker=L.marker(ll,{ icon:L.divIcon({ className:'',iconSize:[36,36],iconAnchor:[18,18],
         html:`<div class="bus-icon-wrap">🚌</div>` }) }).addTo(leafletMap);
       busMarker.bindPopup(`<b>${drive.name}</b><br>${drive.bus}<br>${drive.from} → ${drive.to}`);
     } else { busMarker.setLatLng(ll); }
 
-    // trail (only for driver's own drive)
-    if(activeDriveId===drive.id&&coordHistory.length>1){
+    // Trail for driver's own view
+    if(activeDriveId===drive.id && coordHistory.length>1){
       if(!trailLine) trailLine=L.polyline(coordHistory,{color:'#00e5ff',weight:3,opacity:.6,dashArray:'6,4'}).addTo(leafletMap);
       else trailLine.setLatLngs(coordHistory);
     }
@@ -634,35 +692,40 @@ function updateMapLayers(drive){
     document.getElementById('ms-status').style.color='var(--muted2)';
   }
 
-  // YOU
-  if(passCoords){
-    const yll=[passCoords.lat,passCoords.lng];
-    if(!youMarker){
-      youMarker=L.marker(yll,{ icon:L.divIcon({ className:'',iconSize:[28,28],iconAnchor:[14,14],
-        html:`<div class="you-icon-wrap">👤</div>` }) }).addTo(leafletMap);
-      youMarker.bindPopup('You are here');
-    } else { youMarker.setLatLng(yll); }
-  }
+  // ── YOUR MARKER (always refresh)
+  placeYouMarker();
 
-  // DISTANCE LINE + FIT
-  if(passCoords&&drive.lat!=null){
+  // ── DISTANCE LINE + MAP FIT
+  if(passCoords && drive.lat!=null){
     const dist=calcDist(passCoords.lat,passCoords.lng,drive.lat,drive.lng);
     document.getElementById('ms-dist').textContent=dist;
+    // Dashed purple line between you and bus
     if(distLine) leafletMap.removeLayer(distLine);
-    distLine=L.polyline([[passCoords.lat,passCoords.lng],[drive.lat,drive.lng]],
-      {color:'#7c5cfc',weight:2,opacity:.55,dashArray:'4,6'}).addTo(leafletMap);
-    leafletMap.fitBounds([[passCoords.lat,passCoords.lng],[drive.lat,drive.lng]],{padding:[50,50]});
+    distLine=L.polyline(
+      [[passCoords.lat,passCoords.lng],[drive.lat,drive.lng]],
+      {color:'#7c5cfc',weight:2.5,opacity:.65,dashArray:'5,7'}
+    ).addTo(leafletMap);
+    // Fit map to show both markers
+    leafletMap.fitBounds(
+      [[passCoords.lat,passCoords.lng],[drive.lat,drive.lng]],
+      {padding:[55,55], maxZoom:17}
+    );
+  } else if(passCoords && !drive.lat){
+    // Only passenger location known — center on them
+    document.getElementById('ms-dist').textContent='Bus GPS not started yet';
+    leafletMap.panTo([passCoords.lat,passCoords.lng],{animate:true});
   } else if(drive.lat!=null){
-    document.getElementById('ms-dist').textContent='Enable your location';
+    // Only bus known
+    document.getElementById('ms-dist').textContent='Enable your location above';
     leafletMap.panTo([drive.lat,drive.lng],{animate:true});
   } else {
     document.getElementById('ms-dist').textContent='—';
   }
 
-  const pct=Math.min((coordHistory.length||0)*.35,97);
+  const pct=Math.min((coordHistory.length||0)*.35, 97);
   document.getElementById('modal-prog').style.width=Math.max(pct,2)+'%';
   document.getElementById('modal-prog-lbl').textContent=drive.lat
-    ?'Bus GPS active — updating live':'Waiting for driver to start GPS…';
+    ?'Bus GPS active — updating live' : 'Waiting for driver to start GPS…';
 }
 
 window.closeMap = () => {
