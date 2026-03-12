@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <style>
-:root {
+:root{
   --bg:#070810;--surf:#0f1118;--surf2:#161922;--surf3:#1e2230;
   --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
   --accent:#00e5ff;--accent2:#7c5cfc;--green:#00d48a;
@@ -23,9 +23,11 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   background-image:radial-gradient(circle,rgba(255,255,255,.03) 1px,transparent 1px);
   background-size:28px 28px;
   mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 40%,transparent 100%);}
+
+/* NAV */
 nav{position:sticky;top:0;z-index:300;height:62px;display:flex;align-items:center;
   justify-content:space-between;padding:0 1.25rem;
-  background:rgba(7,8,16,.9);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);}
+  background:rgba(7,8,16,.92);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);}
 .logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.15rem;
   display:flex;align-items:center;gap:9px;letter-spacing:-.02em;}
 .logo-icon{width:30px;height:30px;border-radius:8px;
@@ -43,10 +45,14 @@ nav{position:sticky;top:0;z-index:300;height:62px;display:flex;align-items:cente
   min-width:16px;height:16px;border-radius:8px;display:inline-flex;align-items:center;
   justify-content:center;padding:0 4px;animation:pop .4s cubic-bezier(.34,1.56,.64,1);}
 @keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+
+/* PAGES */
 .page{display:none;position:relative;z-index:1;}
 .page.active{display:block;animation:fadeUp .35s ease forwards;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 .container{max-width:1040px;margin:0 auto;padding:2rem 1.25rem;}
+
+/* HEADINGS */
 .pg-tag{display:inline-flex;align-items:center;gap:6px;
   background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.18);
   color:var(--accent);padding:3px 11px;border-radius:20px;
@@ -54,11 +60,15 @@ nav{position:sticky;top:0;z-index:300;height:62px;display:flex;align-items:cente
 .pg-header h1{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;letter-spacing:-.02em;}
 .pg-header p{color:var(--muted2);margin-top:5px;font-size:.88rem;}
 .pg-header{margin-bottom:1.75rem;}
+
+/* CARDS */
 .card{background:var(--surf);border:1px solid var(--border);border-radius:18px;
   padding:1.4rem;box-shadow:0 4px 30px rgba(0,0,0,.25);}
 .card+.card,.card+.active-strip{margin-top:.85rem;}
 .card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:.93rem;
   margin-bottom:1rem;display:flex;align-items:center;gap:7px;}
+
+/* FORM */
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;}
 .fgroup{display:flex;flex-direction:column;gap:5px;}
 .fgroup.full{grid-column:1/-1;}
@@ -68,6 +78,8 @@ input,select{background:var(--surf2);border:1px solid var(--border2);border-radi
   transition:border-color .2s,box-shadow .2s;outline:none;width:100%;}
 input:focus,select:focus{border-color:rgba(0,229,255,.45);box-shadow:0 0 0 3px rgba(0,229,255,.07);}
 select option{background:var(--surf2);}
+
+/* BUTTONS */
 .btn{display:inline-flex;align-items:center;gap:7px;padding:10px 18px;border-radius:9px;border:none;
   font-family:'DM Sans',sans-serif;font-size:.86rem;font-weight:600;cursor:pointer;
   transition:all .18s;white-space:nowrap;}
@@ -81,19 +93,30 @@ select option{background:var(--surf2);}
 .btn-ghost:hover{border-color:rgba(255,255,255,.18);}
 .btn-danger{background:var(--red);color:#fff;}
 .btn-row{display:flex;gap:8px;margin-top:1rem;flex-wrap:wrap;}
+
+/* STATS */
 .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;margin-bottom:1.4rem;}
 .stat{background:var(--surf);border:1px solid var(--border);border-radius:14px;
   padding:.85rem 1rem;display:flex;flex-direction:column;align-items:center;gap:3px;}
 .stat-num{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;}
 .stat-lbl{font-size:.68rem;color:var(--muted2);text-transform:uppercase;letter-spacing:.05em;font-weight:600;}
+
+/* LOC ROW */
 .loc-row{display:flex;align-items:center;justify-content:space-between;
   background:var(--surf2);border:1px solid var(--border);border-radius:11px;
   padding:11px 14px;gap:1rem;flex-wrap:wrap;}
 .loc-signal{display:flex;align-items:center;gap:9px;font-size:.87rem;}
 .dot{width:10px;height:10px;border-radius:50%;background:var(--muted);flex-shrink:0;}
-.dot.live{background:var(--green);box-shadow:0 0 10px var(--green);animation:pdot 1.4s infinite;}
-@keyframes pdot{0%,100%{opacity:1}50%{opacity:.3}}
-.coords-text{font-size:.73rem;color:var(--muted2);font-family:monospace;margin-top:3px;}
+.dot.live{background:var(--green);box-shadow:0 0 10px var(--green);animation:pdot 1s infinite;}
+@keyframes pdot{0%,100%{opacity:1}50%{opacity:.2}}
+.coords-text{font-size:.72rem;color:var(--muted2);font-family:monospace;margin-top:3px;}
+
+/* FREQ BADGE */
+.freq-badge{display:inline-flex;align-items:center;gap:4px;
+  background:rgba(0,212,138,.12);border:1px solid rgba(0,212,138,.25);
+  color:var(--green);padding:2px 8px;border-radius:20px;font-size:.68rem;font-weight:700;margin-left:8px;}
+
+/* ACTIVE STRIP */
 .active-strip{background:linear-gradient(120deg,rgba(0,229,255,.05),rgba(124,92,252,.05));
   border:1px solid rgba(0,229,255,.18);border-radius:18px;padding:1.25rem 1.4rem;margin-top:.85rem;}
 .as-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem;flex-wrap:wrap;gap:.5rem;}
@@ -101,16 +124,28 @@ select option{background:var(--surf2);}
   background:rgba(0,212,138,.14);border:1px solid rgba(0,212,138,.3);
   color:var(--green);padding:3px 11px;border-radius:20px;
   font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;}
-.live-badge::before{content:'● ';animation:pdot 1.4s infinite;}
+.live-badge::before{content:'● ';animation:pdot 1s infinite;}
 .as-route{font-family:'Syne',sans-serif;font-size:1.15rem;font-weight:800;letter-spacing:-.02em;}
 .as-meta{display:flex;gap:1.25rem;flex-wrap:wrap;margin-top:.55rem;}
 .am-item{display:flex;flex-direction:column;gap:1px;}
 .am-lbl{font-size:.68rem;color:var(--muted2);text-transform:uppercase;letter-spacing:.05em;font-weight:600;}
 .am-val{font-size:.86rem;font-weight:500;}
+
+/* PROGRESS */
 .prog-wrap{margin-top:.9rem;}
 .prog-track{background:var(--surf2);border-radius:6px;height:5px;overflow:hidden;}
-.prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:6px;transition:width 1.2s ease;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:6px;transition:width .8s ease;}
 .prog-label{font-size:.73rem;color:var(--muted2);margin-top:5px;}
+
+/* UPDATE FLASH */
+.update-flash{
+  display:inline-block;width:8px;height:8px;border-radius:50%;
+  background:var(--accent);margin-left:6px;vertical-align:middle;
+  animation:flash-out .6s ease forwards;
+}
+@keyframes flash-out{0%{opacity:1;transform:scale(1.4)}100%{opacity:0;transform:scale(.5)}}
+
+/* RIDE CARDS */
 .rides-grid{display:grid;gap:.8rem;}
 .ride-card{background:var(--surf);border:1px solid var(--border);border-radius:15px;
   padding:1.05rem 1.2rem;cursor:pointer;transition:all .22s;position:relative;overflow:hidden;}
@@ -125,11 +160,15 @@ select option{background:var(--surf2);}
 .pill-warn{background:rgba(255,107,53,.13);color:var(--warn);border:1px solid rgba(255,107,53,.28);animation:flash 1.6s infinite;}
 @keyframes flash{0%,100%{opacity:1}50%{opacity:.45}}
 .rc-dist{margin-top:.6rem;font-size:.78rem;color:var(--accent);font-weight:600;display:flex;align-items:center;gap:5px;}
+
+/* PASSENGER GPS BAR */
 .pass-gps-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;
   background:rgba(124,92,252,.08);border:1px solid rgba(124,92,252,.22);
   border-radius:12px;padding:.85rem 1.1rem;margin-bottom:1.25rem;}
 .pass-gps-bar p{font-size:.85rem;color:var(--muted2);}
 .pass-gps-bar p strong{color:var(--text);}
+
+/* MAP MODAL */
 .overlay{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.82);
   backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;
   opacity:0;pointer-events:none;transition:opacity .3s;padding:1rem;}
@@ -141,34 +180,63 @@ select option{background:var(--surf2);}
 .overlay.open .modal{transform:scale(1) translateY(0);}
 .modal-head{display:flex;align-items:center;justify-content:space-between;
   padding:1rem 1.3rem;border-bottom:1px solid var(--border);flex-shrink:0;}
-.modal-head h3{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;}
+.modal-head h3{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;
+  display:flex;align-items:center;gap:8px;}
 .modal-close{width:30px;height:30px;border-radius:7px;background:var(--surf2);
   border:1px solid var(--border2);cursor:pointer;color:var(--muted2);font-size:1rem;
   display:flex;align-items:center;justify-content:center;}
 .modal-body{overflow-y:auto;padding:1.1rem;}
-#live-map{height:320px;border-radius:14px;overflow:hidden;border:1px solid var(--border);margin-bottom:1rem;}
-.leaflet-tile{filter:brightness(.85) saturate(.75) hue-rotate(180deg) invert(1);}
-.leaflet-container{background:#0f1118!important;}
-.bus-icon-wrap{width:36px;height:36px;background:var(--accent);border-radius:50%;
-  border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-size:.95rem;
-  animation:sonar 2s infinite;}
-@keyframes sonar{0%{box-shadow:0 0 0 0 rgba(0,229,255,.7)}70%{box-shadow:0 0 0 20px rgba(0,229,255,0)}100%{box-shadow:0 0 0 0 rgba(0,229,255,0)}}
-.you-icon-wrap{width:38px;height:38px;background:#7c5cfc;border-radius:50%;
+
+/* MAP */
+#live-map{height:340px;border-radius:14px;overflow:hidden;border:1px solid var(--border);margin-bottom:1rem;}
+.leaflet-tile{filter:brightness(.82) saturate(.7) hue-rotate(180deg) invert(1);}
+.leaflet-container{background:#0a0c14!important;}
+
+/* BUS MARKER - smooth transition via CSS */
+.bus-wrap{
+  width:40px;height:40px;background:var(--accent);border-radius:50%;
   border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-size:1rem;
-  box-shadow:0 0 0 0 rgba(124,92,252,.7);animation:you-pulse 2.2s infinite;}
-@keyframes you-pulse{0%{box-shadow:0 0 0 0 rgba(124,92,252,.7)}70%{box-shadow:0 0 0 16px rgba(124,92,252,0)}100%{box-shadow:0 0 0 0 rgba(124,92,252,0)}}
+  box-shadow:0 0 0 0 rgba(0,229,255,.8);
+  animation:sonar 1.5s infinite;
+  transition:transform .1s linear;
+}
+@keyframes sonar{
+  0%  {box-shadow:0 0 0 0   rgba(0,229,255,.8)}
+  70% {box-shadow:0 0 0 24px rgba(0,229,255,0)}
+  100%{box-shadow:0 0 0 0   rgba(0,229,255,0)}
+}
+/* YOU marker */
+.you-wrap{
+  width:38px;height:38px;background:#7c5cfc;border-radius:50%;
+  border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-size:1rem;
+  box-shadow:0 0 0 0 rgba(124,92,252,.8);animation:you-sonar 2s infinite;
+}
+@keyframes you-sonar{
+  0%  {box-shadow:0 0 0 0   rgba(124,92,252,.8)}
+  70% {box-shadow:0 0 0 18px rgba(124,92,252,0)}
+  100%{box-shadow:0 0 0 0   rgba(124,92,252,0)}
+}
+
+/* MAP STATS */
 .map-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:.6rem;margin-bottom:.9rem;}
 @media(min-width:480px){.map-stats{grid-template-columns:repeat(4,1fr);}}
 .ms{background:var(--surf2);border:1px solid var(--border);border-radius:10px;padding:.65rem .8rem;}
 .ms-lbl{font-size:.66rem;color:var(--muted2);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:3px;}
 .ms-val{font-size:.9rem;font-weight:600;}
+
+/* LATENCY CHIP */
+.latency-chip{
+  font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:20px;
+  background:rgba(0,212,138,.12);border:1px solid rgba(0,212,138,.25);color:var(--green);
+}
+
+/* ALERTS */
 .ntype-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.65rem;margin-bottom:.9rem;}
 @media(min-width:480px){.ntype-grid{grid-template-columns:repeat(4,1fr);}}
 .ntype{padding:11px 8px;border-radius:12px;border:2px solid var(--border);background:var(--surf2);
   cursor:pointer;transition:all .2s;text-align:center;color:var(--muted2);
   font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:600;}
 .ntype .ni{font-size:1.3rem;display:block;margin-bottom:3px;}
-.ntype:hover{border-color:rgba(255,255,255,.15);color:var(--text);}
 .ntype.s-warn{border-color:var(--warn);background:rgba(255,107,53,.07);color:var(--warn);}
 .ntype.s-yellow{border-color:var(--yellow);background:rgba(255,200,46,.07);color:var(--yellow);}
 .ntype.s-red{border-color:var(--red);background:rgba(255,61,90,.07);color:var(--red);}
@@ -183,6 +251,8 @@ select option{background:var(--surf2);}
 .ni-body h4{font-weight:600;font-size:.86rem;margin-bottom:2px;}
 .ni-body p{font-size:.78rem;color:var(--muted2);line-height:1.4;}
 .ni-time{font-size:.68rem;color:var(--muted);margin-top:4px;}
+
+/* TOAST */
 #toasts{position:fixed;top:70px;right:14px;z-index:600;display:flex;flex-direction:column;gap:6px;}
 .toast{background:var(--surf);border:1px solid var(--border2);border-radius:11px;
   padding:9px 15px;display:flex;align-items:center;gap:8px;font-size:.83rem;
@@ -191,6 +261,8 @@ select option{background:var(--surf2);}
 @keyframes tIn{from{opacity:0;transform:translateX(50px)}to{opacity:1;transform:translateX(0)}}
 .toast.out{animation:tOut .25s ease forwards;}
 @keyframes tOut{to{opacity:0;transform:translateX(50px)}}
+
+/* MISC */
 .err-box{display:none;margin-top:.7rem;padding:9px 13px;background:rgba(255,107,53,.1);
   border:1px solid rgba(255,107,53,.25);border-radius:9px;font-size:.82rem;color:var(--warn);}
 .empty{text-align:center;padding:2.5rem 1rem;color:var(--muted);}
@@ -211,21 +283,20 @@ select option{background:var(--surf2);}
     <button class="tab"        id="tab-alerts"    onclick="goPage('alerts',this)">🔔 Alerts<span id="abadge" style="display:none" class="tbadge">0</span></button>
   </div>
 </nav>
-
 <div id="toasts"></div>
 
-<!-- DRIVER -->
+<!-- ══ DRIVER ══ -->
 <div class="page active" id="page-driver">
 <div class="container">
   <div class="pg-header">
     <div class="pg-tag">⚡ Driver Dashboard</div>
     <h1>Manage Your Drive</h1>
-    <p>Create a drive — instantly visible on every device that opens this link</p>
+    <p>GPS pushes via WebSocket — passengers see your location in milliseconds</p>
   </div>
   <div class="stats-row">
     <div class="stat"><div class="stat-num" id="s-drives" style="color:var(--accent)">—</div><div class="stat-lbl">Active Drives</div></div>
-    <div class="stat"><div class="stat-num" id="s-alerts" style="color:var(--warn)">—</div><div class="stat-lbl">Alerts Sent</div></div>
-    <div class="stat"><div class="stat-num" id="s-fb" style="color:var(--green);font-size:.85rem">Connecting…</div><div class="stat-lbl">Firebase</div></div>
+    <div class="stat"><div class="stat-num" id="s-updates" style="color:var(--green)">0</div><div class="stat-lbl">GPS Updates Sent</div></div>
+    <div class="stat"><div class="stat-num" id="s-fb" style="color:var(--green);font-size:.8rem">Connecting…</div><div class="stat-lbl">RTDB Status</div></div>
   </div>
   <div class="card" id="drive-form">
     <div class="card-title">🗺️ Create New Drive</div>
@@ -255,19 +326,19 @@ select option{background:var(--surf2);}
         <div class="am-item"><div class="am-lbl">Departs</div><div class="am-val" id="ad-time">—</div></div>
         <div class="am-item"><div class="am-lbl">Route</div><div class="am-val" id="ad-rno">—</div></div>
       </div>
-      <div class="prog-wrap">
-        <div class="prog-track"><div class="prog-fill" id="ad-prog" style="width:2%"></div></div>
-        <div class="prog-label" id="ad-prog-lbl">Waiting for GPS…</div>
-      </div>
     </div>
     <div class="card">
-      <div class="card-title">📡 GPS Broadcast</div>
+      <div class="card-title">
+        📡 GPS Broadcast
+        <span class="freq-badge" id="freq-badge">⚡ Max Accuracy</span>
+      </div>
       <div class="loc-row">
         <div class="loc-signal">
           <div class="dot" id="loc-dot"></div>
           <div>
             <div id="loc-status">Not broadcasting</div>
             <div class="coords-text" id="loc-coords">—</div>
+            <div class="coords-text" id="loc-speed" style="color:var(--accent)">—</div>
           </div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -281,17 +352,17 @@ select option{background:var(--surf2);}
 </div>
 </div>
 
-<!-- PASSENGER -->
+<!-- ══ PASSENGER ══ -->
 <div class="page" id="page-passenger">
 <div class="container">
   <div class="pg-header">
     <div class="pg-tag">🗺️ Passenger View</div>
     <h1>Available Drives</h1>
-    <p>Tap any drive to see the bus live on the map + your distance to it</p>
+    <p>Bus location streams live via WebSocket — updates in milliseconds</p>
   </div>
   <div class="pass-gps-bar">
     <div>
-      <p><strong>📍 Share your location</strong> to see distance to the bus</p>
+      <p><strong>📍 Share your location</strong> to see your distance to the bus</p>
       <p id="pass-loc-txt" style="margin-top:3px;font-size:.8rem">Location not active</p>
     </div>
     <button class="btn btn-ghost" id="btn-pass-gps" onclick="startPassengerGPS()" style="font-size:.8rem;padding:8px 14px">Enable My Location</button>
@@ -302,7 +373,7 @@ select option{background:var(--surf2);}
 </div>
 </div>
 
-<!-- ALERTS -->
+<!-- ══ ALERTS ══ -->
 <div class="page" id="page-alerts">
 <div class="container">
   <div class="pg-header">
@@ -331,12 +402,12 @@ select option{background:var(--surf2);}
     <button class="btn btn-ghost" style="padding:5px 11px;font-size:.75rem" onclick="clearAlerts()">Clear All</button>
   </div>
   <div class="notif-list" id="notif-list">
-    <div class="empty"><div class="empty-ico">🔕</div><p>No alerts sent yet.</p></div>
+    <div class="empty"><div class="empty-ico">🔕</div><p>No alerts yet.</p></div>
   </div>
 </div>
 </div>
 
-<!-- MAP MODAL -->
+<!-- ══ MAP MODAL ══ -->
 <div class="overlay" id="overlay">
   <div class="modal">
     <div class="modal-head">
@@ -346,10 +417,22 @@ select option{background:var(--surf2);}
     <div class="modal-body">
       <div id="live-map"></div>
       <div class="map-stats">
-        <div class="ms"><div class="ms-lbl">Bus Status</div><div class="ms-val" id="ms-status">—</div></div>
-        <div class="ms"><div class="ms-lbl">Bus Coords</div><div class="ms-val" id="ms-coords" style="font-size:.72rem;font-family:monospace">—</div></div>
-        <div class="ms"><div class="ms-lbl">Accuracy</div><div class="ms-val" id="ms-acc">—</div></div>
-        <div class="ms"><div class="ms-lbl">Your Distance</div><div class="ms-val" id="ms-dist" style="color:var(--accent)">—</div></div>
+        <div class="ms">
+          <div class="ms-lbl">Bus Status</div>
+          <div class="ms-val" id="ms-status">—</div>
+        </div>
+        <div class="ms">
+          <div class="ms-lbl">Last Update</div>
+          <div class="ms-val" id="ms-latency" style="color:var(--green)">—</div>
+        </div>
+        <div class="ms">
+          <div class="ms-lbl">GPS Accuracy</div>
+          <div class="ms-val" id="ms-acc">—</div>
+        </div>
+        <div class="ms">
+          <div class="ms-lbl">Your Distance</div>
+          <div class="ms-val" id="ms-dist" style="color:var(--accent)">—</div>
+        </div>
       </div>
       <div class="prog-wrap">
         <div class="prog-track"><div class="prog-fill" id="modal-prog" style="width:2%"></div></div>
@@ -361,230 +444,277 @@ select option{background:var(--surf2);}
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script type="module">
-import { initializeApp }     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+// ═══════════════════════════════════════════════════════
+//  Firebase — Firestore (drives/alerts) + RTDB (live GPS)
+// ═══════════════════════════════════════════════════════
+import { initializeApp }
+  from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
 import { getFirestore, collection, doc, setDoc, onSnapshot,
-         deleteDoc, query, orderBy, addDoc, getDocs,
-         updateDoc, serverTimestamp }
+         deleteDoc, query, orderBy, addDoc, getDocs, updateDoc,
+         serverTimestamp }
   from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+import { getDatabase, ref, set, onValue, remove, off }
+  from "https://www.gstatic.com/firebasejs/12.10.0/firebase-database.js";
 
-const app = initializeApp({
+const FB = {
   apiKey:            "AIzaSyAX-XtRxFlaP4skRl24uJSZNZEK8XLBeKw",
   authDomain:        "mehulxd-69e38.firebaseapp.com",
   projectId:         "mehulxd-69e38",
   storageBucket:     "mehulxd-69e38.firebasestorage.app",
   messagingSenderId: "1088176842250",
-  appId:             "1:1088176842250:web:1459a0c355ecfb11f021f3"
-});
-const db = getFirestore(app);
+  appId:             "1:1088176842250:web:1459a0c355ecfb11f021f3",
+  databaseURL:       "https://mehulxd-69e38-default-rtdb.firebaseio.com"
+};
 
-// ── STATE
-let activeDriveId   = null;
-let watchId         = null;
-let passWatchId     = null;
-let passCoords      = null;
-let coordHistory    = [];
-let drivesCache     = {};
-let alertBadge      = 0;
-let selectedType    = 'breakdown';
-let leafletMap      = null;
-let busMarker       = null;
-let youMarker       = null;
-let trailLine       = null;
-let distLine        = null;
-let mapDriveId      = null;
-let mapInterval     = null;
+const app  = initializeApp(FB);
+const db   = getFirestore(app);   // Firestore — drives list & alerts
+const rtdb = getDatabase(app);    // Realtime DB — live GPS coords (WebSocket)
 
-// ── FIREBASE CONNECTED
-document.getElementById('s-fb').textContent = '✓ Connected';
+// ── STATE ────────────────────────────────────────────
+let activeDriveId  = null;
+let geoWatchId     = null;
+let passGeoWatchId = null;
+let passCoords     = null;
+let gpsUpdateCount = 0;
+let drivesCache    = {};
+let alertBadge     = 0;
+let selectedType   = 'breakdown';
 
-// ── REAL-TIME: DRIVES
+// Leaflet
+let lmap       = null;
+let busMarker  = null;
+let youMarker  = null;
+let trailLine  = null;
+let distLine   = null;
+let mapDriveId = null;
+let rtdbUnsub  = null;   // RTDB listener unsubscribe
+
+// Smooth interpolation
+let busTarget  = null;   // {lat,lng} — where bus should be
+let busCurrent = null;   // {lat,lng} — where marker currently is
+let interpFrame= null;   // requestAnimationFrame handle
+let lastUpdate = null;   // timestamp of last RTDB update
+
+// Trail (last 200 points)
+const trail = [];
+
+// ── FIREBASE STATUS ──────────────────────────────────
+document.getElementById('s-fb').textContent  = '✓ WebSocket';
+document.getElementById('s-fb').style.color  = 'var(--green)';
+document.getElementById('s-fb').style.fontSize = '.75rem';
+
+// ── REALTIME LISTENERS (Firestore) ───────────────────
 onSnapshot(collection(db,'drives'), snap => {
   drivesCache = {};
   snap.forEach(d => { drivesCache[d.id] = { id:d.id, ...d.data() }; });
   renderRides();
   document.getElementById('s-drives').textContent =
-    Object.values(drivesCache).filter(d=>d.status==='active').length;
-  // if map open, refresh it
-  if (mapDriveId && drivesCache[mapDriveId]) updateMapLayers();
+    Object.values(drivesCache).filter(d => d.status==='active').length;
 });
 
-// ── REAL-TIME: ALERTS
 onSnapshot(query(collection(db,'alerts'), orderBy('ts','desc')), snap => {
   const list = [];
   snap.forEach(d => list.push({ id:d.id, ...d.data() }));
-  document.getElementById('s-alerts').textContent = list.length;
   renderAlerts(list);
 });
 
-// ── NAV
+// ── NAV ──────────────────────────────────────────────
 window.goPage = (name, el) => {
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   el.classList.add('active');
-  if (name==='alerts') clearBadge();
+  if(name==='alerts') clearBadge();
 };
 
-// ── TOAST
+// ── TOAST ─────────────────────────────────────────────
 function toast(msg, icon='✅', bc=null) {
-  const w=document.getElementById('toasts');
-  const el=document.createElement('div');
-  el.className='toast';
-  if(bc) el.style.borderColor=bc;
-  el.innerHTML=`<span>${icon}</span><span>${msg}</span>`;
+  const w = document.getElementById('toasts');
+  const el = document.createElement('div');
+  el.className = 'toast';
+  if(bc) el.style.borderColor = bc;
+  el.innerHTML = `<span>${icon}</span><span>${msg}</span>`;
   w.appendChild(el);
-  setTimeout(()=>{ el.classList.add('out'); setTimeout(()=>el.remove(),280); }, 3200);
+  setTimeout(() => { el.classList.add('out'); setTimeout(()=>el.remove(),280); }, 3200);
 }
 
-// ── DRIVER
+// ── DRIVER FORM ───────────────────────────────────────
 window.fillDemo = () => {
-  document.getElementById('f-name').value ='Arjun Mehta';
-  document.getElementById('f-bus').value  ='BUS-07';
-  document.getElementById('f-from').value ='Central Station';
-  document.getElementById('f-to').value   ='Airport Terminal 2';
-  document.getElementById('f-time').value ='14:30';
-  document.getElementById('f-route').value='R-12';
+  document.getElementById('f-name').value  = 'Arjun Mehta';
+  document.getElementById('f-bus').value   = 'BUS-07';
+  document.getElementById('f-from').value  = 'Central Station';
+  document.getElementById('f-to').value    = 'Airport Terminal 2';
+  document.getElementById('f-time').value  = '14:30';
+  document.getElementById('f-route').value = 'R-12';
   toast('Demo data filled!','✏️');
 };
 
 window.createDrive = async () => {
-  const name =g('f-name'), bus=g('f-bus')||'BUS-?';
-  const from =g('f-from'), to =g('f-to');
-  const time =g('f-time'), route=g('f-route');
+  const name  = g('f-name'),  bus   = g('f-bus') || 'BUS-?';
+  const from  = g('f-from'),  to    = g('f-to');
+  const time  = g('f-time'),  route = g('f-route');
   if(!name||!from||!to){ toast('Fill Driver, From and To!','⚠️','var(--warn)'); return; }
-  const ref = doc(collection(db,'drives'));
-  await setDoc(ref,{ name,bus,from,to,time,route,
-    status:'active',lat:null,lng:null,acc:null,
-    createdAt:serverTimestamp() });
-  activeDriveId = ref.id;
-  document.getElementById('drive-form').style.display  ='none';
-  document.getElementById('drive-active').style.display='block';
-  document.getElementById('ad-route').textContent=`${from} → ${to}`;
-  document.getElementById('ad-name').textContent =name;
-  document.getElementById('ad-bus').textContent  =bus;
-  document.getElementById('ad-time').textContent =time||'—';
-  document.getElementById('ad-rno').textContent  =route||'—';
-  toast('Drive created! Visible on all devices now.','🚌','var(--accent)');
+
+  const ref2 = doc(collection(db,'drives'));
+  await setDoc(ref2,{ name,bus,from,to,time,route,
+    status:'active', createdAt:serverTimestamp() });
+  activeDriveId = ref2.id;
+
+  document.getElementById('drive-form').style.display   = 'none';
+  document.getElementById('drive-active').style.display = 'block';
+  document.getElementById('ad-route').textContent = `${from} → ${to}`;
+  document.getElementById('ad-name').textContent  = name;
+  document.getElementById('ad-bus').textContent   = bus;
+  document.getElementById('ad-time').textContent  = time||'—';
+  document.getElementById('ad-rno').textContent   = route||'—';
+  toast('Drive created! Visible on all devices.','🚌','var(--accent)');
 };
 
 window.endDrive = async () => {
   if(!activeDriveId) return;
   stopGPS();
+  // Remove RTDB entry too
+  await remove(ref(rtdb, `locations/${activeDriveId}`));
   await deleteDoc(doc(db,'drives',activeDriveId));
-  activeDriveId=null;
-  coordHistory=[];
-  document.getElementById('drive-form').style.display  ='block';
-  document.getElementById('drive-active').style.display='none';
+  activeDriveId = null;
+  trail.length = 0;
+  document.getElementById('drive-form').style.display   = 'block';
+  document.getElementById('drive-active').style.display = 'none';
   toast('Drive ended.','🏁');
 };
 
 function g(id){ return document.getElementById(id).value.trim(); }
 
-// ── GPS (DRIVER)
+// ══════════════════════════════════════════════════════
+//  DRIVER GPS  — writes to RTDB via WebSocket
+//  maximumAge:0  → never use cached position
+//  timeout: 5000 → fail fast, retry
+// ══════════════════════════════════════════════════════
 window.startGPS = () => {
   if(!navigator.geolocation){ showErr('Geolocation not supported.'); return; }
-  document.getElementById('btn-start').style.display='none';
-  document.getElementById('btn-stop').style.display ='flex';
-  document.getElementById('loc-status').textContent ='Acquiring GPS…';
-  document.getElementById('gps-err').style.display  ='none';
-  watchId = navigator.geolocation.watchPosition(onPos, onErr,
-    { enableHighAccuracy:true, maximumAge:4000, timeout:15000 });
+  document.getElementById('btn-start').style.display = 'none';
+  document.getElementById('btn-stop').style.display  = 'flex';
+  document.getElementById('loc-status').textContent  = 'Acquiring GPS signal…';
+  document.getElementById('gps-err').style.display   = 'none';
+
+  geoWatchId = navigator.geolocation.watchPosition(
+    onDriverPos,
+    onDriverErr,
+    {
+      enableHighAccuracy: true,  // use GPS chip, not WiFi/cell
+      maximumAge:         0,     // NEVER use cached — always fresh
+      timeout:            5000   // retry every 5s if no signal
+    }
+  );
 };
 
-async function onPos(pos) {
-  const lat=pos.coords.latitude, lng=pos.coords.longitude, acc=pos.coords.accuracy;
-  coordHistory.push([lat,lng]);
-  if(coordHistory.length>500) coordHistory.shift();
-  document.getElementById('loc-dot').classList.add('live');
-  document.getElementById('loc-status').textContent='● Broadcasting live GPS';
-  document.getElementById('loc-coords').textContent=`${lat.toFixed(6)}, ${lng.toFixed(6)}  ±${Math.round(acc)}m`;
-  const pct=Math.min(coordHistory.length*.35,97);
-  document.getElementById('ad-prog').style.width    =pct+'%';
-  document.getElementById('ad-prog-lbl').textContent=`GPS active · ${Math.round(pct)}% progress`;
+async function onDriverPos(pos) {
+  const { latitude:lat, longitude:lng, accuracy:acc, speed, heading } = pos.coords;
+  const ts = Date.now();
+
+  // Push to RTDB — this is a WebSocket write, ~50ms round-trip
   if(activeDriveId) {
-    await updateDoc(doc(db,'drives',activeDriveId),
-      { lat, lng, acc, updatedAt:serverTimestamp() });
+    await set(ref(rtdb, `locations/${activeDriveId}`), {
+      lat, lng, acc,
+      spd: speed   ? Math.round(speed * 3.6) : null,  // m/s → km/h
+      hdg: heading ? Math.round(heading)     : null,
+      ts
+    });
+    gpsUpdateCount++;
+    document.getElementById('s-updates').textContent = gpsUpdateCount;
+    // flash indicator
+    const s = document.getElementById('loc-status');
+    s.innerHTML = '● Broadcasting live GPS <span class="update-flash"></span>';
   }
-  document.getElementById('gps-err').style.display='none';
+
+  document.getElementById('loc-dot').classList.add('live');
+  document.getElementById('loc-coords').textContent =
+    `${lat.toFixed(6)}, ${lng.toFixed(6)}  ±${Math.round(acc)}m`;
+  document.getElementById('loc-speed').textContent =
+    speed ? `🚗 ${Math.round(speed*3.6)} km/h` : '🚗 Speed not available';
+  document.getElementById('gps-err').style.display = 'none';
 }
 
-function onErr(err) {
-  let m=err.message;
-  if(err.code===1) m='Permission denied. Allow location in browser settings.';
-  if(err.code===2) m='Position unavailable. Try outdoors.';
-  if(err.code===3) m='GPS timed out. Try again.';
-  showErr('⚠️ '+m); toast('GPS error','⚠️','var(--warn)');
+function onDriverErr(err) {
+  let m = err.message;
+  if(err.code===1) m = 'Permission denied. Allow location in browser/app settings.';
+  if(err.code===2) m = 'GPS unavailable. Try going outdoors.';
+  if(err.code===3) m = 'GPS timeout — retrying…';
+  showErr('⚠️ '+m);
 }
+
 function showErr(m){ const e=document.getElementById('gps-err'); e.style.display='block'; e.textContent=m; }
 
 window.stopGPS = () => {
-  if(watchId!==null){ navigator.geolocation.clearWatch(watchId); watchId=null; }
+  if(geoWatchId!==null){ navigator.geolocation.clearWatch(geoWatchId); geoWatchId=null; }
   document.getElementById('loc-dot').classList.remove('live');
-  document.getElementById('loc-status').textContent='Not broadcasting';
-  document.getElementById('loc-coords').textContent='—';
-  document.getElementById('btn-start').style.display='flex';
-  document.getElementById('btn-stop').style.display ='none';
+  document.getElementById('loc-status').textContent = 'Not broadcasting';
+  document.getElementById('loc-coords').textContent = '—';
+  document.getElementById('loc-speed').textContent  = '—';
+  document.getElementById('btn-start').style.display = 'flex';
+  document.getElementById('btn-stop').style.display  = 'none';
 };
 
-// ── PASSENGER GPS
+// ══════════════════════════════════════════════════════
+//  PASSENGER GPS
+// ══════════════════════════════════════════════════════
 window.startPassengerGPS = () => {
   if(!navigator.geolocation){ toast('Geolocation not supported','⚠️'); return; }
   const btn = document.getElementById('btn-pass-gps');
-  btn.textContent='Getting location…';
-  btn.disabled = true;
+  btn.textContent = 'Getting location…';
+  btn.disabled    = true;
 
-  passWatchId = navigator.geolocation.watchPosition(pos=>{
-    passCoords={ lat:pos.coords.latitude, lng:pos.coords.longitude };
-
-    // Update UI bar
-    document.getElementById('pass-loc-txt').innerHTML=
-      `📍 <span style="font-family:monospace">${passCoords.lat.toFixed(5)}, ${passCoords.lng.toFixed(5)}</span>`;
-    btn.textContent='✓ Your Location Active';
-    btn.style.color='var(--green)';
-    btn.style.borderColor='var(--green)';
-    btn.disabled = false;
-
-    // Refresh ride cards to show distances
-    renderRides();
-
-    // If map modal is open — place/move your marker immediately
-    if(leafletMap && mapDriveId){
-      placeYouMarker();
-      updateMapLayers();
-    }
-  },
-  err=>{
-    btn.disabled = false;
-    let m = err.message;
-    if(err.code===1) m='Permission denied. Tap your browser address bar and allow location.';
-    if(err.code===2) m='Position unavailable. Try outdoors or check GPS settings.';
-    if(err.code===3) m='GPS timed out. Please try again.';
-    btn.textContent='Enable My Location';
-    toast('Location error: '+m,'⚠️','var(--warn)');
-  },
-  { enableHighAccuracy:true, maximumAge:3000, timeout:15000 });
+  passGeoWatchId = navigator.geolocation.watchPosition(
+    pos => {
+      passCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      document.getElementById('pass-loc-txt').innerHTML =
+        `📍 <span style="font-family:monospace">${passCoords.lat.toFixed(5)}, ${passCoords.lng.toFixed(5)}</span>`;
+      btn.textContent   = '✓ Your Location Active';
+      btn.style.color   = 'var(--green)';
+      btn.style.borderColor = 'var(--green)';
+      btn.disabled = false;
+      renderRides();
+      // If map is open — update your marker & distance instantly
+      if(lmap && mapDriveId) {
+        placeYouMarker();
+        refreshDistanceLine();
+      }
+    },
+    err => {
+      btn.disabled = false;
+      btn.textContent = 'Enable My Location';
+      let m = err.message;
+      if(err.code===1) m='Permission denied. Allow location in your browser.';
+      if(err.code===2) m='GPS unavailable. Try outdoors.';
+      toast('Location error: '+m,'⚠️','var(--warn)');
+    },
+    { enableHighAccuracy:true, maximumAge:0, timeout:8000 }
+  );
 };
 
-
-// ── RENDER RIDES
+// ══════════════════════════════════════════════════════
+//  RENDER RIDE CARDS
+// ══════════════════════════════════════════════════════
 function renderRides() {
-  const wrap=document.getElementById('rides-wrap');
-  const active=Object.values(drivesCache).filter(d=>d.status==='active'||d.status==='breakdown');
+  const wrap   = document.getElementById('rides-wrap');
+  const active = Object.values(drivesCache).filter(d=>d.status==='active'||d.status==='breakdown');
   if(!active.length){
-    wrap.innerHTML=`<div class="empty"><div class="empty-ico">🚌</div><p>No active drives yet.<br>Ask your driver to start one.</p></div>`;
+    wrap.innerHTML = `<div class="empty"><div class="empty-ico">🚌</div><p>No active drives yet.</p></div>`;
     return;
   }
-  wrap.innerHTML='<div class="rides-grid">'+active.map(d=>{
-    const pill=d.status==='breakdown'
-      ?`<span class="pill pill-warn">⚠ Breakdown</span>`
-      :`<span class="pill pill-green">● Active</span>`;
-    const hasGPS=d.lat!=null&&d.lng!=null;
-    const dist=(hasGPS&&passCoords)?calcDist(passCoords.lat,passCoords.lng,d.lat,d.lng):null;
-    const distHtml=dist!=null
-      ?`<div class="rc-dist">📍 You are <strong>${dist}</strong> from the bus</div>`
-      :hasGPS
-        ?`<div class="rc-dist" style="color:var(--muted2)">📍 Enable your location to see distance</div>`
-        :`<div class="rc-dist" style="color:var(--muted2)">⏳ Waiting for driver to start GPS…</div>`;
+  wrap.innerHTML = '<div class="rides-grid">'+active.map(d => {
+    const pill = d.status==='breakdown'
+      ? `<span class="pill pill-warn">⚠ Breakdown</span>`
+      : `<span class="pill pill-green">● Active</span>`;
+    // Distance comes from RTDB cache
+    const loc = window._rtdbCache?.[d.id];
+    const dist = (loc && passCoords)
+      ? calcDist(passCoords.lat,passCoords.lng,loc.lat,loc.lng) : null;
+    const distHtml = dist
+      ? `<div class="rc-dist">📍 You are <strong>${dist}</strong> from the bus</div>`
+      : loc
+        ? `<div class="rc-dist" style="color:var(--muted2)">📍 Enable your location to see distance</div>`
+        : `<div class="rc-dist" style="color:var(--muted2)">⏳ Waiting for driver GPS…</div>`;
     return `<div class="ride-card" onclick="window.openMap('${d.id}')">
       <div class="rc-top"><div class="rc-route">${d.from} → ${d.to}</div>${pill}</div>
       <div class="rc-meta">
@@ -596,185 +726,254 @@ function renderRides() {
   }).join('')+'</div>';
 }
 
-// ── HAVERSINE DISTANCE
-function calcDist(la1,lo1,la2,lo2){
-  const R=6371000,r=Math.PI/180;
-  const a=Math.sin((la2-la1)*r/2)**2+Math.cos(la1*r)*Math.cos(la2*r)*Math.sin((lo2-lo1)*r/2)**2;
-  const m=R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-  return m<1000?Math.round(m)+' m':(m/1000).toFixed(1)+' km';
-}
-function calcDistM(la1,lo1,la2,lo2){
-  const R=6371000,r=Math.PI/180;
-  const a=Math.sin((la2-la1)*r/2)**2+Math.cos(la1*r)*Math.cos(la2*r)*Math.sin((lo2-lo1)*r/2)**2;
-  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-}
+// Global RTDB location cache — keyed by driveId
+window._rtdbCache = {};
 
-// ── MAP MODAL
+// ══════════════════════════════════════════════════════
+//  OPEN MAP MODAL
+// ══════════════════════════════════════════════════════
 window.openMap = driveId => {
-  const drive=drivesCache[driveId]; if(!drive) return;
-  mapDriveId=driveId;
-  document.getElementById('modal-title').textContent=`📍 ${drive.from} → ${drive.to}`;
+  const drive = drivesCache[driveId]; if(!drive) return;
+  mapDriveId = driveId;
+  document.getElementById('modal-title').textContent = `📍 ${drive.from} → ${drive.to}`;
   document.getElementById('overlay').classList.add('open');
-  setTimeout(()=>initMap(drive),90);
+  setTimeout(() => initMap(drive), 80);
 };
 
-function initMap(drive){
-  if(leafletMap){ leafletMap.remove(); leafletMap=null; busMarker=null; youMarker=null; trailLine=null; distLine=null; }
-  clearInterval(mapInterval);
+function initMap(drive) {
+  // Teardown old map
+  if(lmap){ cancelAnimationFrame(interpFrame); lmap.remove(); lmap=null; busMarker=null; youMarker=null; trailLine=null; distLine=null; }
+  if(rtdbUnsub){ rtdbUnsub(); rtdbUnsub=null; }
 
-  // Best center: bus → passenger → world fallback
-  const cLat = drive.lat ?? passCoords?.lat ?? 20.5937;
-  const cLng = drive.lng ?? passCoords?.lng ?? 78.9629;
-  const zoom  = (drive.lat || passCoords) ? 15 : 5;
+  const cachedLoc = window._rtdbCache[drive.id];
+  const cLat = cachedLoc?.lat ?? passCoords?.lat ?? 20.5937;
+  const cLng = cachedLoc?.lng ?? passCoords?.lng ?? 78.9629;
+  const zoom  = (cachedLoc || passCoords) ? 16 : 5;
 
-  leafletMap = L.map('live-map', { center:[cLat,cLng], zoom });
+  lmap = L.map('live-map', { center:[cLat,cLng], zoom, zoomControl:true });
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    { subdomains:'abcd', maxZoom:19 }).addTo(leafletMap);
+    { subdomains:'abcd', maxZoom:20 }).addTo(lmap);
 
-  // Place YOUR marker immediately if GPS was already granted
+  // Place your marker immediately if GPS already active
   placeYouMarker();
-  updateMapLayers(drive);
 
-  // Poll every 3 s for bus updates + keep your marker current
-  mapInterval = setInterval(()=>{
-    placeYouMarker();
-    const d = drivesCache[mapDriveId];
-    if(d) updateMapLayers(d);
-  }, 3000);
+  // Place bus marker if we already have a location
+  if(cachedLoc) onRTDBUpdate(cachedLoc, false);
+
+  // ── SUBSCRIBE TO RTDB — WebSocket push, fires on every GPS update ──
+  const locRef = ref(rtdb, `locations/${drive.id}`);
+  let firstFit = true;
+  onValue(locRef, snapshot => {
+    const data = snapshot.val();
+    if(!data) return;
+
+    // Cache for ride cards
+    window._rtdbCache[drive.id] = data;
+    lastUpdate = Date.now();
+
+    onRTDBUpdate(data, firstFit);
+    firstFit = false;
+
+    // Update trail
+    trail.push([data.lat, data.lng]);
+    if(trail.length > 200) trail.shift();
+    if(trailLine) trailLine.setLatLngs(trail);
+    else if(trail.length > 1) {
+      trailLine = L.polyline(trail,{color:'#00e5ff',weight:3,opacity:.55,dashArray:'6,5'}).addTo(lmap);
+    }
+
+    // Refresh distance
+    if(passCoords) refreshDistanceLine();
+
+    // Show latency
+    const ago = Date.now() - lastUpdate;
+    document.getElementById('ms-latency').textContent = ago < 200 ? '< 200ms ⚡' : `${ago}ms`;
+    document.getElementById('ms-acc').textContent = data.acc ? `±${Math.round(data.acc)}m` : '—';
+
+    // Stats
+    const spd = data.spd ? `${data.spd} km/h` : 'Speed unavailable';
+    document.getElementById('ms-status').textContent  = `● Live  ${spd}`;
+    document.getElementById('ms-status').style.color  = 'var(--green)';
+    document.getElementById('modal-prog-lbl').textContent = `GPS streaming · Updated just now`;
+  });
+
+  // Store unsubscribe function
+  rtdbUnsub = () => off(locRef);
+
+  // Start smooth interpolation loop
+  startInterpolation();
 }
 
-// Separate helper — always safe to call
-function placeYouMarker(){
-  if(!leafletMap || !passCoords) return;
+// ── RTDB UPDATE → set target for interpolation ────────
+function onRTDBUpdate(data, fitMap) {
+  if(!lmap) return;
+  const ll = [data.lat, data.lng];
+
+  busTarget  = { lat:data.lat, lng:data.lng };
+  busCurrent = busCurrent || { ...busTarget };
+
+  if(!busMarker) {
+    busMarker = L.marker(ll, {
+      icon: L.divIcon({ className:'', iconSize:[40,40], iconAnchor:[20,20],
+        html:`<div class="bus-wrap">🚌</div>` }),
+      zIndexOffset: 500
+    }).addTo(lmap);
+    busMarker.bindPopup(
+      `<b>${drivesCache[mapDriveId]?.name||'Driver'}</b><br>
+       ${drivesCache[mapDriveId]?.bus||''}<br>
+       Accuracy: ±${Math.round(data.acc||0)}m`
+    );
+  }
+
+  if(fitMap && passCoords) {
+    lmap.fitBounds([[data.lat,data.lng],[passCoords.lat,passCoords.lng]],{padding:[55,55],maxZoom:17});
+  } else if(fitMap) {
+    lmap.setView([data.lat,data.lng], 16, {animate:true});
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  SMOOTH INTERPOLATION
+//  Runs at 60fps via requestAnimationFrame
+//  Eases the bus marker toward the latest GPS fix
+// ══════════════════════════════════════════════════════
+function startInterpolation() {
+  cancelAnimationFrame(interpFrame);
+  const LERP = 0.18;  // 0–1: higher = snappier, lower = smoother
+
+  function step() {
+    if(!lmap || !busMarker || !busTarget || !busCurrent) {
+      interpFrame = requestAnimationFrame(step); return;
+    }
+    const dLat = busTarget.lat - busCurrent.lat;
+    const dLng = busTarget.lng - busCurrent.lng;
+    // Only move if difference is meaningful
+    if(Math.abs(dLat) > 1e-8 || Math.abs(dLng) > 1e-8) {
+      busCurrent.lat += dLat * LERP;
+      busCurrent.lng += dLng * LERP;
+      busMarker.setLatLng([busCurrent.lat, busCurrent.lng]);
+      // Smoothly pan map to follow bus (only if not zoomed out too much)
+      if(lmap.getZoom() >= 14 && !passCoords) {
+        lmap.panTo([busCurrent.lat, busCurrent.lng], { animate:false });
+      }
+    }
+    interpFrame = requestAnimationFrame(step);
+  }
+  interpFrame = requestAnimationFrame(step);
+}
+
+// ── YOUR MARKER ───────────────────────────────────────
+function placeYouMarker() {
+  if(!lmap || !passCoords) return;
   const yll = [passCoords.lat, passCoords.lng];
-  if(!youMarker){
+  if(!youMarker) {
     youMarker = L.marker(yll, {
-      icon: L.divIcon({
-        className:'',
-        iconSize:[38,38],
-        iconAnchor:[19,19],
-        html:`<div class="you-icon-wrap" style="width:38px;height:38px;font-size:1rem;">👤</div>`
-      }),
+      icon: L.divIcon({ className:'', iconSize:[38,38], iconAnchor:[19,19],
+        html:`<div class="you-wrap">👤</div>` }),
       zIndexOffset: 1000
-    }).addTo(leafletMap);
+    }).addTo(lmap);
     youMarker.bindPopup('<b>📍 You are here</b>');
   } else {
     youMarker.setLatLng(yll);
   }
 }
 
-function updateMapLayers(drive){
-  if(!leafletMap) return;
-  if(!drive) drive=drivesCache[mapDriveId];
-  if(!drive) return;
-
-  // ── BUS MARKER
-  if(drive.lat!=null && drive.lng!=null){
-    const ll=[drive.lat, drive.lng];
-    if(!busMarker){
-      busMarker=L.marker(ll,{ icon:L.divIcon({ className:'',iconSize:[36,36],iconAnchor:[18,18],
-        html:`<div class="bus-icon-wrap">🚌</div>` }) }).addTo(leafletMap);
-      busMarker.bindPopup(`<b>${drive.name}</b><br>${drive.bus}<br>${drive.from} → ${drive.to}`);
-    } else { busMarker.setLatLng(ll); }
-
-    // Trail for driver's own view
-    if(activeDriveId===drive.id && coordHistory.length>1){
-      if(!trailLine) trailLine=L.polyline(coordHistory,{color:'#00e5ff',weight:3,opacity:.6,dashArray:'6,4'}).addTo(leafletMap);
-      else trailLine.setLatLngs(coordHistory);
-    }
-
-    document.getElementById('ms-status').textContent='● GPS Live';
-    document.getElementById('ms-status').style.color='var(--green)';
-    document.getElementById('ms-coords').textContent=`${drive.lat.toFixed(5)}, ${drive.lng.toFixed(5)}`;
-    document.getElementById('ms-acc').textContent=drive.acc?`±${Math.round(drive.acc)} m`:'—';
-  } else {
-    document.getElementById('ms-status').textContent='Waiting for GPS…';
-    document.getElementById('ms-status').style.color='var(--muted2)';
+// ── DISTANCE LINE ─────────────────────────────────────
+function refreshDistanceLine() {
+  if(!lmap || !passCoords) return;
+  const loc = window._rtdbCache[mapDriveId];
+  if(!loc) {
+    document.getElementById('ms-dist').textContent = 'Waiting for bus GPS…';
+    return;
   }
+  const dist = calcDist(passCoords.lat,passCoords.lng,loc.lat,loc.lng);
+  document.getElementById('ms-dist').textContent = dist;
 
-  // ── YOUR MARKER (always refresh)
-  placeYouMarker();
+  if(distLine) lmap.removeLayer(distLine);
+  distLine = L.polyline(
+    [[passCoords.lat,passCoords.lng],[loc.lat,loc.lng]],
+    { color:'#7c5cfc', weight:2.5, opacity:.6, dashArray:'5,7' }
+  ).addTo(lmap);
 
-  // ── DISTANCE LINE + MAP FIT
-  if(passCoords && drive.lat!=null){
-    const dist=calcDist(passCoords.lat,passCoords.lng,drive.lat,drive.lng);
-    document.getElementById('ms-dist').textContent=dist;
-    // Dashed purple line between you and bus
-    if(distLine) leafletMap.removeLayer(distLine);
-    distLine=L.polyline(
-      [[passCoords.lat,passCoords.lng],[drive.lat,drive.lng]],
-      {color:'#7c5cfc',weight:2.5,opacity:.65,dashArray:'5,7'}
-    ).addTo(leafletMap);
-    // Fit map to show both markers
-    leafletMap.fitBounds(
-      [[passCoords.lat,passCoords.lng],[drive.lat,drive.lng]],
-      {padding:[55,55], maxZoom:17}
-    );
-  } else if(passCoords && !drive.lat){
-    // Only passenger location known — center on them
-    document.getElementById('ms-dist').textContent='Bus GPS not started yet';
-    leafletMap.panTo([passCoords.lat,passCoords.lng],{animate:true});
-  } else if(drive.lat!=null){
-    // Only bus known
-    document.getElementById('ms-dist').textContent='Enable your location above';
-    leafletMap.panTo([drive.lat,drive.lng],{animate:true});
-  } else {
-    document.getElementById('ms-dist').textContent='—';
-  }
-
-  const pct=Math.min((coordHistory.length||0)*.35, 97);
-  document.getElementById('modal-prog').style.width=Math.max(pct,2)+'%';
-  document.getElementById('modal-prog-lbl').textContent=drive.lat
-    ?'Bus GPS active — updating live' : 'Waiting for driver to start GPS…';
+  // Fit both markers in view
+  lmap.fitBounds(
+    [[passCoords.lat,passCoords.lng],[loc.lat,loc.lng]],
+    { padding:[55,55], maxZoom:17, animate:true }
+  );
 }
 
+// ── CLOSE MAP ─────────────────────────────────────────
 window.closeMap = () => {
   document.getElementById('overlay').classList.remove('open');
-  clearInterval(mapInterval); mapDriveId=null;
-  if(leafletMap){ leafletMap.remove(); leafletMap=null; busMarker=null; youMarker=null; trailLine=null; distLine=null; }
+  cancelAnimationFrame(interpFrame);
+  if(rtdbUnsub){ rtdbUnsub(); rtdbUnsub=null; }
+  if(lmap){ lmap.remove(); lmap=null; busMarker=null; youMarker=null; trailLine=null; distLine=null; }
+  mapDriveId = null; busTarget = null; busCurrent = null;
+  trail.length = 0;
 };
-document.getElementById('overlay').addEventListener('click',e=>{ if(e.target===e.currentTarget) window.closeMap(); });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape') window.closeMap(); });
+document.getElementById('overlay').addEventListener('click', e => { if(e.target===e.currentTarget) window.closeMap(); });
+document.addEventListener('keydown', e => { if(e.key==='Escape') window.closeMap(); });
 
-// ── ALERTS
-const AM={
-  breakdown:{ icon:'🔧',bg:'rgba(255,107,53,.14)',color:'var(--warn)',  label:'Vehicle Breakdown'},
-  delay:    { icon:'⏱',bg:'rgba(255,200,46,.12)',color:'var(--yellow)',label:'Service Delay'    },
-  cancelled:{ icon:'🚫',bg:'rgba(255,61,90,.13)', color:'var(--red)',  label:'Route Cancelled' },
-  ok:       { icon:'✅',bg:'rgba(0,212,138,.12)', color:'var(--green)',label:'Service Resumed'  },
+// ── HAVERSINE ─────────────────────────────────────────
+function calcDist(la1,lo1,la2,lo2) {
+  const R=6371000, r=Math.PI/180;
+  const a = Math.sin((la2-la1)*r/2)**2 + Math.cos(la1*r)*Math.cos(la2*r)*Math.sin((lo2-lo1)*r/2)**2;
+  const m = R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  return m<1000 ? Math.round(m)+' m' : (m/1000).toFixed(2)+' km';
+}
+
+// ── RTDB GLOBAL LISTENER (for ride card distances) ────
+// Listen to ALL drive locations for distance display on cards
+onValue(ref(rtdb,'locations'), snapshot => {
+  const all = snapshot.val() || {};
+  window._rtdbCache = all;
+  renderRides();
+});
+
+// ═══════════════════════════════════════════════════════
+//  ALERTS (Firestore)
+// ═══════════════════════════════════════════════════════
+const AM = {
+  breakdown:{ icon:'🔧', bg:'rgba(255,107,53,.14)', color:'var(--warn)',   label:'Vehicle Breakdown'},
+  delay:    { icon:'⏱', bg:'rgba(255,200,46,.12)', color:'var(--yellow)', label:'Service Delay'    },
+  cancelled:{ icon:'🚫', bg:'rgba(255,61,90,.13)', color:'var(--red)',    label:'Route Cancelled'  },
+  ok:       { icon:'✅', bg:'rgba(0,212,138,.12)', color:'var(--green)',  label:'Service Resumed'  },
 };
 
 window.pickType = el => {
-  document.querySelectorAll('.ntype').forEach(b=>{ b.className='ntype'; });
-  selectedType=el.dataset.t;
+  document.querySelectorAll('.ntype').forEach(b => { b.className='ntype'; });
+  selectedType = el.dataset.t;
   el.classList.add({breakdown:'s-warn',delay:'s-yellow',cancelled:'s-red',ok:'s-green'}[selectedType]);
 };
 
 window.sendAlert = async () => {
-  const meta=AM[selectedType];
-  const msg=document.getElementById('notif-msg').value.trim();
-  const d=Object.values(drivesCache).find(x=>x.status==='active');
-  const route=d?`${d.from} → ${d.to}`:'Unknown Route';
-  const driver=d?.name||'Driver';
-  if(activeDriveId&&(selectedType==='breakdown'||selectedType==='cancelled'))
-    await updateDoc(doc(db,'drives',activeDriveId),{status:'breakdown'});
-  else if(activeDriveId&&selectedType==='ok')
-    await updateDoc(doc(db,'drives',activeDriveId),{status:'active'});
+  const meta   = AM[selectedType];
+  const msg    = document.getElementById('notif-msg').value.trim();
+  const d      = Object.values(drivesCache).find(x => x.status==='active');
+  const route  = d ? `${d.from} → ${d.to}` : 'Unknown Route';
+  const driver = d?.name || 'Driver';
+
+  if(activeDriveId && (selectedType==='breakdown'||selectedType==='cancelled'))
+    await updateDoc(doc(db,'drives',activeDriveId),{ status:'breakdown' });
+  else if(activeDriveId && selectedType==='ok')
+    await updateDoc(doc(db,'drives',activeDriveId),{ status:'active' });
+
   await addDoc(collection(db,'alerts'),{
     type:selectedType, icon:meta.icon, bg:meta.bg, color:meta.color, label:meta.label,
-    msg:msg||`${meta.label} reported on ${route}`, driver, route,
-    time:new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),
-    ts:serverTimestamp()
+    msg: msg||`${meta.label} reported on ${route}`,
+    driver, route,
+    time: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),
+    ts: serverTimestamp()
   });
-  document.getElementById('notif-msg').value='';
+  document.getElementById('notif-msg').value = '';
   bumpBadge();
-  toast(`Alert: ${meta.label}`,meta.icon,meta.color);
+  toast(`Alert: ${meta.label}`, meta.icon, meta.color);
 };
 
-function renderAlerts(list){
-  const el=document.getElementById('notif-list');
+function renderAlerts(list) {
+  const el = document.getElementById('notif-list');
   if(!list.length){ el.innerHTML=`<div class="empty"><div class="empty-ico">🔕</div><p>No alerts yet.</p></div>`; return; }
-  el.innerHTML=list.map((a,i)=>`
+  el.innerHTML = list.map((a,i) => `
     <div class="ni-card" style="animation-delay:${i*.04}s">
       <div class="ni-ico" style="background:${a.bg}">${a.icon}</div>
       <div class="ni-body"><h4>${a.label}</h4><p>${a.msg}</p>
@@ -783,16 +982,16 @@ function renderAlerts(list){
 }
 
 window.clearAlerts = async () => {
-  const snap=await getDocs(collection(db,'alerts'));
-  await Promise.all(snap.docs.map(d=>deleteDoc(doc(db,'alerts',d.id))));
+  const snap = await getDocs(collection(db,'alerts'));
+  await Promise.all(snap.docs.map(d => deleteDoc(doc(db,'alerts',d.id))));
   clearBadge();
 };
 
-function bumpBadge(){
+function bumpBadge() {
   alertBadge++;
-  const b=document.getElementById('abadge');
-  b.textContent=alertBadge; b.style.display='inline-flex';
-  b.className='tbadge'; void b.offsetWidth;
+  const b = document.getElementById('abadge');
+  b.textContent = alertBadge; b.style.display = 'inline-flex';
+  b.className = 'tbadge'; void b.offsetWidth;
 }
 function clearBadge(){ alertBadge=0; document.getElementById('abadge').style.display='none'; }
 </script>
